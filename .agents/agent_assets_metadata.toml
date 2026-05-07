@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "BP-s7HMgeAuB0ZDXU42oe"
+uri = "file://artifacts/budget-mobile/assets/images/icon.png"
+type = "image"
+title = "budgetwise mobile icon"

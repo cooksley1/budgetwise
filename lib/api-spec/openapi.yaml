@@ -1,22 +1,35 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: BudgetWise API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: accounts
+    description: Financial accounts
+  - name: transactions
+    description: Financial transactions
+  - name: categories
+    description: Spending categories
+  - name: budgets
+    description: Category budgets
+  - name: goals
+    description: Savings goals
+  - name: subscriptions
+    description: Recurring subscriptions
+  - name: dashboard
+    description: Dashboard aggregates and summaries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +37,575 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Accounts ──────────────────────────────────────────────────────────────
+  /accounts:
+    get:
+      operationId: listAccounts
+      tags: [accounts]
+      summary: List all accounts
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+    post:
+      operationId: createAccount
+      tags: [accounts]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountBody"
+      responses:
+        "201":
+          description: Created account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /accounts/{id}:
+    get:
+      operationId: getAccount
+      tags: [accounts]
+      summary: Get account by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          description: Not found
+    put:
+      operationId: updateAccount
+      tags: [accounts]
+      summary: Update an account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountBody"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+    delete:
+      operationId: deleteAccount
+      tags: [accounts]
+      summary: Delete an account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Categories ────────────────────────────────────────────────────────────
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryBody"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete a category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Transactions ──────────────────────────────────────────────────────────
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions
+      parameters:
+        - name: accountId
+          in: query
+          schema:
+            type: integer
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [income, expense, transfer]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Transaction"
+                  total:
+                    type: integer
+                required: [data, total]
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionBody"
+      responses:
+        "201":
+          description: Created transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get transaction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+    put:
+      operationId: updateTransaction
+      tags: [transactions]
+      summary: Update a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTransactionBody"
+      responses:
+        "200":
+          description: Updated transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+    delete:
+      operationId: deleteTransaction
+      tags: [transactions]
+      summary: Delete a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /transactions/recent:
+    get:
+      operationId: listRecentTransactions
+      tags: [transactions]
+      summary: Get recent transactions (last 10)
+      responses:
+        "200":
+          description: Recent transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  # ── Budgets ───────────────────────────────────────────────────────────────
+  /budgets:
+    get:
+      operationId: listBudgets
+      tags: [budgets]
+      summary: List all budgets
+      parameters:
+        - name: month
+          in: query
+          description: "Month in YYYY-MM format"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Budget"
+    post:
+      operationId: createBudget
+      tags: [budgets]
+      summary: Create a budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBudgetBody"
+      responses:
+        "201":
+          description: Created budget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+
+  /budgets/{id}:
+    put:
+      operationId: updateBudget
+      tags: [budgets]
+      summary: Update a budget
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBudgetBody"
+      responses:
+        "200":
+          description: Updated budget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+    delete:
+      operationId: deleteBudget
+      tags: [budgets]
+      summary: Delete a budget
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /budgets/overview:
+    get:
+      operationId: getBudgetsOverview
+      tags: [budgets]
+      summary: Get all budgets with spending progress for current month
+      responses:
+        "200":
+          description: Budgets with spending progress
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BudgetProgress"
+
+  # ── Goals ─────────────────────────────────────────────────────────────────
+  /goals:
+    get:
+      operationId: listGoals
+      tags: [goals]
+      summary: List all savings goals
+      responses:
+        "200":
+          description: List of goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a savings goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGoalBody"
+      responses:
+        "201":
+          description: Created goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /goals/{id}:
+    put:
+      operationId: updateGoal
+      tags: [goals]
+      summary: Update a savings goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGoalBody"
+      responses:
+        "200":
+          description: Updated goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+    delete:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a savings goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Subscriptions ─────────────────────────────────────────────────────────
+  /subscriptions:
+    get:
+      operationId: listSubscriptions
+      tags: [subscriptions]
+      summary: List all subscriptions
+      responses:
+        "200":
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+    post:
+      operationId: createSubscription
+      tags: [subscriptions]
+      summary: Create a subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriptionBody"
+      responses:
+        "201":
+          description: Created subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  /subscriptions/{id}:
+    put:
+      operationId: updateSubscription
+      tags: [subscriptions]
+      summary: Update a subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSubscriptionBody"
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+    delete:
+      operationId: deleteSubscription
+      tags: [subscriptions]
+      summary: Delete a subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Dashboard ─────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary — total balance, income, expenses, spendable
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/spending-by-category:
+    get:
+      operationId: getSpendingByCategory
+      tags: [dashboard]
+      summary: Get spending grouped by category for the current month
+      parameters:
+        - name: month
+          in: query
+          description: "Month in YYYY-MM format, defaults to current month"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Spending by category
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategorySpending"
+
+  /dashboard/cash-flow:
+    get:
+      operationId: getCashFlow
+      tags: [dashboard]
+      summary: Get monthly income vs expenses for the last 6 months
+      responses:
+        "200":
+          description: Cash flow by month
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyFlow"
+
+# ── Schemas ───────────────────────────────────────────────────────────────────
 components:
   schemas:
     HealthStatus:
@@ -31,6 +613,438 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    # Account
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [checking, savings, credit, investment, cash]
+        balance:
+          type: number
+        currency:
+          type: string
+          default: USD
+        color:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, type, balance, currency, createdAt]
+
+    CreateAccountBody:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [checking, savings, credit, investment, cash]
+        balance:
+          type: number
+          default: 0
+        currency:
+          type: string
+          default: USD
+        color:
+          type: string
+      required: [name, type]
+
+    UpdateAccountBody:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [checking, savings, credit, investment, cash]
+        balance:
+          type: number
+        currency:
+          type: string
+        color:
+          type: string
+
+    # Category
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        type:
+          type: string
+          enum: [income, expense]
+      required: [id, name, type]
+
+    CreateCategoryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        type:
+          type: string
+          enum: [income, expense]
+      required: [name, type]
+
+    # Transaction
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        accountId:
+          type: integer
+        categoryId:
+          type: integer
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense, transfer]
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        isRecurring:
+          type: boolean
+          default: false
+        accountName:
+          type: string
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, accountId, amount, type, date, createdAt]
+
+    CreateTransactionBody:
+      type: object
+      properties:
+        accountId:
+          type: integer
+        categoryId:
+          type: integer
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense, transfer]
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        isRecurring:
+          type: boolean
+          default: false
+      required: [accountId, amount, type, date]
+
+    UpdateTransactionBody:
+      type: object
+      properties:
+        accountId:
+          type: integer
+        categoryId:
+          type: integer
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense, transfer]
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        isRecurring:
+          type: boolean
+
+    # Budget
+    Budget:
+      type: object
+      properties:
+        id:
+          type: integer
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        limitAmount:
+          type: number
+        month:
+          type: string
+          description: "YYYY-MM"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, categoryId, limitAmount, month, createdAt]
+
+    CreateBudgetBody:
+      type: object
+      properties:
+        categoryId:
+          type: integer
+        limitAmount:
+          type: number
+        month:
+          type: string
+          description: "YYYY-MM format"
+      required: [categoryId, limitAmount, month]
+
+    UpdateBudgetBody:
+      type: object
+      properties:
+        limitAmount:
+          type: number
+        month:
+          type: string
+
+    BudgetProgress:
+      type: object
+      properties:
+        id:
+          type: integer
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        limitAmount:
+          type: number
+        spentAmount:
+          type: number
+        remainingAmount:
+          type: number
+        percentUsed:
+          type: number
+        month:
+          type: string
+      required: [id, categoryId, limitAmount, spentAmount, remainingAmount, percentUsed, month]
+
+    # Goal
+    Goal:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        targetAmount:
+          type: number
+        currentAmount:
+          type: number
+        targetDate:
+          type: string
+          format: date
+        icon:
+          type: string
+        color:
+          type: string
+        isCompleted:
+          type: boolean
+        percentComplete:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, targetAmount, currentAmount, isCompleted, percentComplete, createdAt]
+
+    CreateGoalBody:
+      type: object
+      properties:
+        name:
+          type: string
+        targetAmount:
+          type: number
+        currentAmount:
+          type: number
+          default: 0
+        targetDate:
+          type: string
+          format: date
+        icon:
+          type: string
+        color:
+          type: string
+      required: [name, targetAmount]
+
+    UpdateGoalBody:
+      type: object
+      properties:
+        name:
+          type: string
+        targetAmount:
+          type: number
+        currentAmount:
+          type: number
+        targetDate:
+          type: string
+          format: date
+        icon:
+          type: string
+        color:
+          type: string
+        isCompleted:
+          type: boolean
+
+    # Subscription
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: number
+        billingCycle:
+          type: string
+          enum: [weekly, monthly, quarterly, annually]
+        nextBillingDate:
+          type: string
+          format: date
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        isActive:
+          type: boolean
+        color:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, amount, billingCycle, nextBillingDate, isActive, createdAt]
+
+    CreateSubscriptionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+        billingCycle:
+          type: string
+          enum: [weekly, monthly, quarterly, annually]
+        nextBillingDate:
+          type: string
+          format: date
+        categoryId:
+          type: integer
+        isActive:
+          type: boolean
+          default: true
+        color:
+          type: string
+      required: [name, amount, billingCycle, nextBillingDate]
+
+    UpdateSubscriptionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+        billingCycle:
+          type: string
+          enum: [weekly, monthly, quarterly, annually]
+        nextBillingDate:
+          type: string
+          format: date
+        categoryId:
+          type: integer
+        isActive:
+          type: boolean
+        color:
+          type: string
+
+    # Dashboard
+    DashboardSummary:
+      type: object
+      properties:
+        totalBalance:
+          type: number
+        monthlyIncome:
+          type: number
+        monthlyExpenses:
+          type: number
+        spendableAmount:
+          type: number
+        savingsRate:
+          type: number
+        accountCount:
+          type: integer
+        transactionCount:
+          type: integer
+        activeSubscriptionsCost:
+          type: number
+      required:
+        - totalBalance
+        - monthlyIncome
+        - monthlyExpenses
+        - spendableAmount
+        - savingsRate
+        - accountCount
+        - transactionCount
+        - activeSubscriptionsCost
+
+    CategorySpending:
+      type: object
+      properties:
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        totalAmount:
+          type: number
+        transactionCount:
+          type: integer
+        percentage:
+          type: number
+      required: [categoryId, categoryName, totalAmount, transactionCount, percentage]
+
+    MonthlyFlow:
+      type: object
+      properties:
+        month:
+          type: string
+          description: "YYYY-MM"
+        income:
+          type: number
+        expenses:
+          type: number
+        net:
+          type: number
+      required: [month, income, expenses, net]
