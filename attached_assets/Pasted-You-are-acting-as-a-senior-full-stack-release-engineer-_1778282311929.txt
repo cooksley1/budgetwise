@@ -1,0 +1,180 @@
+You are acting as a senior full-stack release engineer and product QA lead.
+
+Project: BudgetWise
+GitHub repo: https://github.com/cooksley1/budgetwise
+
+Goal:
+Make sure this Replit project is fully represented in GitHub first, with everything needed to rebuild, run, modify, and continue developing the app from this Replit workspace or from a fresh GitHub clone. The GitHub repo must contain a pixel-perfect, source-level replication of the current apps, not just generated output.
+
+Critical requirement:
+Before making product changes, first audit and sync the complete project into GitHub. Do not leave important app code, assets, database definitions, generated clients, config files, Replit setup, scripts, or documentation only inside Replit.
+
+Scope:
+This project includes:
+- React web app
+- Expo/mobile app
+- Express API
+- PostgreSQL / Drizzle database layer
+- Generated API clients / OpenAPI / Zod schemas
+- Seed data
+- Replit configuration
+- Build/development scripts
+- UI assets, icons, images, fonts, theme files and styling
+- Any supporting scripts needed to regenerate, deploy or modify the app
+
+Tasks:
+
+1. Audit GitHub completeness
+Compare the current Replit filesystem against the GitHub repo on `main`.
+
+Identify:
+- untracked files
+- ignored but required files
+- local files not committed
+- generated files required for development
+- assets missing from GitHub
+- database schema or migration files missing from GitHub
+- Replit config missing from GitHub
+- environment documentation missing from GitHub
+- scripts needed to build, seed, typecheck, run, regenerate clients, or push DB schema
+
+Do not commit secrets, `.env` files, API keys, database URLs, tokens, private certificates, local cache folders, `node_modules`, or build output unless explicitly required.
+
+2. Ensure pixel-perfect source preservation
+Make sure all source files needed to recreate the current visual app exactly are committed, including:
+- all React/Expo screens
+- layout files
+- component files
+- UI library wrapper components
+- CSS / Tailwind / theme files
+- colours, spacing, typography, tokens
+- image assets, favicons, splash screens, icons, OpenGraph images
+- mobile app config
+- web app config
+- route definitions
+- generated clients if the app currently depends on them
+- any current Replit artifact metadata required to preview/run the apps
+
+If any assets are referenced but missing, locate them in the Replit project and commit them. If they cannot be found, document exactly what is missing.
+
+3. Database completeness
+Make the database reproducible from GitHub.
+
+Ensure GitHub includes:
+- Drizzle schema files
+- database config
+- migration workflow or migration files
+- seed script
+- package scripts to create/update schema
+- package scripts to seed data
+- clear instructions for DATABASE_URL setup
+- clear instructions for local/Replit DB setup
+
+If the project currently only uses `drizzle-kit push`, add proper documentation and scripts so another developer can recreate the DB safely.
+
+Check for and recommend or implement:
+- foreign keys
+- indexes
+- unique constraints
+- check constraints/enums for transaction/account/category types
+- budget uniqueness for category + month
+- safe seed behaviour, ideally idempotent or clearly documented
+
+4. Development readiness in Replit
+Make sure this project can be fully modified and developed from Replit.
+
+Verify or add:
+- correct `.replit` configuration
+- correct ports for API, web app and mobile preview
+- dev scripts
+- build scripts
+- typecheck scripts
+- seed scripts
+- README instructions
+- `.env.example`
+- workspace package scripts
+- pnpm workspace configuration
+- commands to regenerate OpenAPI/API clients/Zod schemas if applicable
+
+The project should support:
+- install dependencies
+- run API server
+- run web app
+- run mobile app preview
+- connect to database
+- seed database
+- typecheck all packages
+- build all packages
+
+5. Add missing repo hygiene
+If missing, add or improve:
+- root `README.md`
+- `.env.example`
+- setup instructions for Replit
+- setup instructions for fresh GitHub clone
+- database setup instructions
+- architecture overview
+- scripts table
+- troubleshooting notes
+- `.gitignore`
+- GitHub Actions CI for install, typecheck and build
+- clear notes about which generated files are committed and how to regenerate them
+
+6. Technical verification
+Run the strongest available checks after syncing:
+- `pnpm install`
+- `pnpm run typecheck`
+- `pnpm run build`
+- package-level builds if root build does not cover everything
+- API server startup check if possible
+- web app startup/build check
+- mobile app typecheck/build check if possible
+- database seed dry-run or documented command if DB is available
+
+Fix any errors that block development or reproducibility.
+
+7. Product-flow audit
+After the GitHub completeness work, review the user experience for logical gaps.
+
+Check whether the app supports sensible flows for:
+- first-time user onboarding
+- creating accounts
+- creating categories
+- adding/editing/deleting transactions
+- budget creation and monthly tracking
+- goals
+- subscriptions
+- reports
+- account balances
+- transfers between accounts
+- recurring transactions
+- empty states
+- loading states
+- error states
+- mobile and desktop responsiveness
+
+Do not build large new features unless they are required to make the app coherent. Instead, create a prioritized issue list or TODO section for missing logical features.
+
+8. Commit everything safely
+Commit all required changes to GitHub.
+
+Use clear commits such as:
+- `chore: sync complete app source and assets`
+- `chore: add reproducible database setup`
+- `docs: add Replit and GitHub development setup`
+- `ci: add typecheck and build workflow`
+- `fix: resolve build and schema issues`
+
+Do not commit secrets.
+
+9. Final report
+When complete, provide a concise report with:
+
+- GitHub sync status
+- commit SHA(s)
+- files added/changed
+- database reproducibility status
+- commands run and whether they passed
+- anything that could not be verified
+- any missing assets or files
+- remaining

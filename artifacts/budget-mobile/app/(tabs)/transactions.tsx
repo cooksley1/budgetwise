@@ -40,7 +40,7 @@ export default function TransactionsScreen() {
     const accId = form.accountId || accounts?.[0]?.id;
     if (!accId) return;
     createTxn.mutate(
-      { data: { accountId: accId, categoryId: form.categoryId, amount: parseFloat(form.amount), type: form.type, description: form.description, date: form.date } },
+      { data: { accountId: accId, categoryId: form.categoryId, amount: parseFloat(form.amount), type: form.type as "income" | "expense" | "transfer", description: form.description, date: form.date } },
       {
         onSuccess: () => {
           qc.invalidateQueries({ queryKey: getListTransactionsQueryKey(params) });

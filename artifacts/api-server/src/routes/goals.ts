@@ -5,6 +5,9 @@ import { CreateGoalBody, UpdateGoalBody, UpdateGoalParams, DeleteGoalParams } fr
 
 const router: IRouter = Router();
 
+/** Drizzle's `date` column expects a YYYY-MM-DD string, not a JS Date object. */
+const toDateStr = (d: Date): string => d.toISOString().slice(0, 10);
+
 router.get("/goals", async (_req, res): Promise<void> => {
   const goals = await db.select().from(goalsTable).orderBy(goalsTable.createdAt);
   const result = goals.map((g) => ({
@@ -20,7 +23,8 @@ router.post("/goals", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [goal] = await db.insert(goalsTable).values(parsed.data).returning();
+  const { targetDate, ...rest } = parsed.data;
+  const [goal] = await db.insert(goalsTable).values({ ...rest, ...(targetDate !== undefined ? { targetDate: toDateStr(targetDate) } : {}) }).returning();
   res.status(201).json({ ...goal, percentComplete: 0 });
 });
 
@@ -35,7 +39,12 @@ router.put("/goals/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [goal] = await db.update(goalsTable).set({ ...parsed.data, updatedAt: new Date() }).where(eq(goalsTable.id, params.data.id)).returning();
+  const { targetDate: updTargetDate, ...updRest } = parsed.data;
+  const [goal] = await db
+    .update(goalsTable)
+    .set({ ...updRest, ...(updTargetDate !== undefined ? { targetDate: toDateStr(updTargetDate) } : {}), updatedAt: new Date() })
+    .where(eq(goalsTable.id, params.data.id))
+    .returning();
   if (!goal) {
     res.status(404).json({ error: "Goal not found" });
     return;

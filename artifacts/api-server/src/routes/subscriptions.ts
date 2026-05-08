@@ -5,6 +5,9 @@ import { CreateSubscriptionBody, UpdateSubscriptionBody, UpdateSubscriptionParam
 
 const router: IRouter = Router();
 
+/** Drizzle's `date` column expects a YYYY-MM-DD string, not a JS Date object. */
+const toDateStr = (d: Date): string => d.toISOString().slice(0, 10);
+
 router.get("/subscriptions", async (_req, res): Promise<void> => {
   const subs = await db
     .select({
@@ -31,7 +34,8 @@ router.post("/subscriptions", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [sub] = await db.insert(subscriptionsTable).values(parsed.data).returning();
+  const { nextBillingDate, ...subRest } = parsed.data;
+  const [sub] = await db.insert(subscriptionsTable).values({ ...subRest, nextBillingDate: toDateStr(nextBillingDate) }).returning();
   res.status(201).json(sub);
 });
 
@@ -46,7 +50,12 @@ router.put("/subscriptions/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [sub] = await db.update(subscriptionsTable).set({ ...parsed.data, updatedAt: new Date() }).where(eq(subscriptionsTable.id, params.data.id)).returning();
+  const { nextBillingDate: updNbd, ...updSubRest } = parsed.data;
+  const [sub] = await db
+    .update(subscriptionsTable)
+    .set({ ...updSubRest, ...(updNbd !== undefined ? { nextBillingDate: toDateStr(updNbd) } : {}), updatedAt: new Date() })
+    .where(eq(subscriptionsTable.id, params.data.id))
+    .returning();
   if (!sub) {
     res.status(404).json({ error: "Subscription not found" });
     return;

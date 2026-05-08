@@ -44,6 +44,12 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
+# Build info / incremental TS cache
+*.tsbuildinfo
+
 # Replit
 .cache/
 .local/
+
+# Screenshots / auto-captured assets (not source)
+attached_assets/screenshots/

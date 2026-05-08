@@ -12,6 +12,9 @@ import {
 
 const router: IRouter = Router();
 
+/** Drizzle's `date` column expects a YYYY-MM-DD string, not a JS Date object. */
+const toDateStr = (d: Date): string => d.toISOString().slice(0, 10);
+
 const withJoins = () =>
   db
     .select({
@@ -66,8 +69,8 @@ router.get("/transactions", async (req, res): Promise<void> => {
   if (accountId) conditions.push(eq(transactionsTable.accountId, accountId));
   if (categoryId) conditions.push(eq(transactionsTable.categoryId, categoryId));
   if (type) conditions.push(eq(transactionsTable.type, type));
-  if (startDate) conditions.push(gte(transactionsTable.date, startDate as string));
-  if (endDate) conditions.push(lte(transactionsTable.date, endDate as string));
+  if (startDate) conditions.push(gte(transactionsTable.date, toDateStr(startDate)));
+  if (endDate) conditions.push(lte(transactionsTable.date, toDateStr(endDate)));
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -89,7 +92,8 @@ router.post("/transactions", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [txn] = await db.insert(transactionsTable).values(parsed.data).returning();
+  const { date, ...rest } = parsed.data;
+  const [txn] = await db.insert(transactionsTable).values({ ...rest, date: toDateStr(date) }).returning();
   const [full] = await withJoins().where(eq(transactionsTable.id, txn.id));
   res.status(201).json(full);
 });
@@ -119,7 +123,11 @@ router.put("/transactions/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  await db.update(transactionsTable).set({ ...parsed.data, updatedAt: new Date() }).where(eq(transactionsTable.id, params.data.id));
+  const { date: updateDate, ...updateRest } = parsed.data;
+  await db
+    .update(transactionsTable)
+    .set({ ...updateRest, ...(updateDate !== undefined ? { date: toDateStr(updateDate) } : {}), updatedAt: new Date() })
+    .where(eq(transactionsTable.id, params.data.id));
   const [txn] = await withJoins().where(eq(transactionsTable.id, params.data.id));
   if (!txn) {
     res.status(404).json({ error: "Transaction not found" });
