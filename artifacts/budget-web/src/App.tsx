@@ -13,6 +13,7 @@ import {
   BarChart3,
   Menu,
   X,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import Dashboard from "@/pages/Dashboard";
@@ -22,6 +23,7 @@ import Goals from "@/pages/Goals";
 import Accounts from "@/pages/Accounts";
 import Subscriptions from "@/pages/Subscriptions";
 import Reports from "@/pages/Reports";
+import BankLink from "@/pages/BankLink";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -35,6 +37,7 @@ const NAV = [
   { path: "/accounts", label: "Accounts", icon: CreditCard },
   { path: "/subscriptions", label: "Subscriptions", icon: RefreshCw },
   { path: "/reports", label: "Reports", icon: BarChart3 },
+  { path: "/smart", label: "Smart Features", icon: Sparkles },
 ];
 
 function Sidebar({ mobile, onClose }: { mobile?: boolean; onClose?: () => void }) {
@@ -140,6 +143,7 @@ function Router() {
         <Route path="/accounts" component={Accounts} />
         <Route path="/subscriptions" component={Subscriptions} />
         <Route path="/reports" component={Reports} />
+        <Route path="/smart" component={BankLink} />
       </Switch>
     </AppShell>
   );
