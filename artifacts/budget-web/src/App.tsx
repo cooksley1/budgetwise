@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Sparkles,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import Dashboard from "@/pages/Dashboard";
@@ -24,6 +25,8 @@ import Accounts from "@/pages/Accounts";
 import Subscriptions from "@/pages/Subscriptions";
 import Reports from "@/pages/Reports";
 import BankLink from "@/pages/BankLink";
+import Trackers from "@/pages/Trackers";
+import TrackerDetail from "@/pages/TrackerDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -36,6 +39,7 @@ const NAV = [
   { path: "/goals", label: "Goals", icon: Target },
   { path: "/accounts", label: "Accounts", icon: CreditCard },
   { path: "/subscriptions", label: "Subscriptions", icon: RefreshCw },
+  { path: "/trackers", label: "Trackers", icon: MapPin },
   { path: "/reports", label: "Reports", icon: BarChart3 },
   { path: "/smart", label: "Smart Features", icon: Sparkles },
 ];
@@ -142,6 +146,8 @@ function Router() {
         <Route path="/goals" component={Goals} />
         <Route path="/accounts" component={Accounts} />
         <Route path="/subscriptions" component={Subscriptions} />
+        <Route path="/trackers" component={Trackers} />
+        <Route path="/trackers/:id" component={TrackerDetail} />
         <Route path="/reports" component={Reports} />
         <Route path="/smart" component={BankLink} />
       </Switch>

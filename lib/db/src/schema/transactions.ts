@@ -11,6 +11,13 @@ export const transactionsTable = pgTable("transactions", {
   description: text("description"),
   date: date("date").notNull(),
   isRecurring: boolean("is_recurring").notNull().default(false),
+  // Multi-currency support: if originalCurrency is set, `amount` is the converted home-currency value
+  originalAmount: doublePrecision("original_amount"),
+  originalCurrency: text("original_currency"),
+  fxRate: doublePrecision("fx_rate"),
+  // Optional location metadata (for theme analytics like coffee variance by place)
+  merchant: text("merchant"),
+  location: text("location"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

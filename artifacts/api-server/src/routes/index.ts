@@ -10,6 +10,8 @@ import dashboardRouter from "./dashboard";
 import plaidRouter from "./plaid";
 import aiRouter from "./ai";
 import gocardlessRouter from "./gocardless";
+import trackersRouter from "./trackers";
+import fxRouter from "./fx";
 
 const router: IRouter = Router();
 
@@ -24,5 +26,7 @@ router.use(dashboardRouter);
 router.use(plaidRouter);
 router.use(aiRouter);
 router.use(gocardlessRouter);
+router.use(trackersRouter);
+router.use(fxRouter);
 
 export default router;
