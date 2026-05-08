@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, doublePrecision, boolean, integer, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, doublePrecision, boolean, integer, date, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -18,6 +18,17 @@ export const transactionsTable = pgTable("transactions", {
   // Optional location metadata (for theme analytics like coffee variance by place)
   merchant: text("merchant"),
   location: text("location"),
+  // ── Holiday/memory tracker fields ──────────────────────────────────────
+  vendorAddress: text("vendor_address"),
+  vendorLat: doublePrecision("vendor_lat"),
+  vendorLng: doublePrecision("vendor_lng"),
+  items: jsonb("items"), // [{name, qty, price}]
+  photoUrl: text("photo_url"),
+  mood: text("mood"), // emoji or short note
+  companions: text("companions").array(),
+  occurredAt: timestamp("occurred_at", { withTimezone: true }), // precise time-of-day for insights
+  tipAmount: doublePrecision("tip_amount"),
+  weather: jsonb("weather"), // {temp, condition, icon} cached
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

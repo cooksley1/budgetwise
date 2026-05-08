@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Plus, Trash2, Tag, Settings, Plane, Coffee, Hammer, Heart, GraduationCap, Repeat, GitCompare, Sparkles } from "lucide-react";
+import {
+  ArrowLeft, Calendar, TrendingUp, TrendingDown, Plus, Trash2, Tag, Plane, Coffee, Hammer, Heart,
+  GraduationCap, Repeat, GitCompare, Sparkles, Map as MapIcon, BookOpen, Camera,
+} from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import HolidayQuickAdd from "./tracker/HolidayQuickAdd";
+import StoryTab from "./tracker/StoryTab";
+import InsightsTab from "./tracker/InsightsTab";
+
+// Lazy-load the Leaflet map (heavy bundle, only mount when tab is opened)
+const MapTab = lazy(() => import("./tracker/MapTab"));
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const ICONS: Record<string, React.ReactNode> = {
-  plane: <Plane size={18} />,
-  coffee: <Coffee size={18} />,
-  hammer: <Hammer size={18} />,
-  heart: <Heart size={18} />,
-  graduationcap: <GraduationCap size={18} />,
+  plane: <Plane size={18} />, coffee: <Coffee size={18} />, hammer: <Hammer size={18} />,
+  heart: <Heart size={18} />, graduationcap: <GraduationCap size={18} />,
 };
 
 interface Detail {
@@ -24,20 +30,28 @@ interface Detail {
   transactions: Array<any>;
 }
 
-interface Tx { id: number; description: string | null; amount: number; date: string; type: string; categoryName: string | null; }
+interface Tx { id: number; description: string | null; amount: number; date: string; type: string; categoryName: string | null; merchant?: string | null; }
 
 const PIE_COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#84cc16"];
+
+type TabKey = "overview" | "map" | "story" | "transactions" | "insights" | "rules" | "compare";
 
 export default function TrackerDetail() {
   const [, params] = useRoute("/trackers/:id");
   const id = Number(params?.id);
   const [data, setData] = useState<Detail | null>(null);
-  const [tab, setTab] = useState<"overview" | "transactions" | "rules" | "compare">("overview");
+  const [insights, setInsights] = useState<any | null>(null);
+  const [tab, setTab] = useState<TabKey>("overview");
   const [showAddTxn, setShowAddTxn] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const load = async () => {
-    const res = await fetch(`${BASE}/api/trackers/${id}`);
-    if (res.ok) setData(await res.json());
+    const [d, i] = await Promise.all([
+      fetch(`${BASE}/api/trackers/${id}`).then((r) => r.ok ? r.json() : null),
+      fetch(`${BASE}/api/trackers/${id}/insights`).then((r) => r.ok ? r.json() : null),
+    ]);
+    if (d) setData(d);
+    if (i) setInsights(i);
   };
 
   useEffect(() => { if (!Number.isNaN(id)) load(); }, [id]);
@@ -46,6 +60,17 @@ export default function TrackerDetail() {
 
   const { tracker, summary, byCategory, byDay, byMerchant, budgetStatus, transactions } = data;
   const fmtHome = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: tracker.homeCurrency }).format(n);
+  const isTrip = tracker.type === "trip";
+
+  const tabs: Array<{ k: TabKey; label: string; icon: any; show: boolean }> = [
+    { k: "overview", label: "Overview", icon: TrendingUp, show: true },
+    { k: "map", label: "Map", icon: MapIcon, show: isTrip || (insights?.mapPoints?.length ?? 0) > 0 },
+    { k: "story", label: "Story", icon: BookOpen, show: isTrip },
+    { k: "transactions", label: "Transactions", icon: Tag, show: true },
+    { k: "insights", label: "Insights", icon: Sparkles, show: true },
+    { k: "rules", label: "Auto-rules", icon: Repeat, show: true },
+    { k: "compare", label: "Compare", icon: GitCompare, show: true },
+  ];
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -60,7 +85,7 @@ export default function TrackerDetail() {
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">{tracker.name}</h1>
             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-              <span className="px-2 py-0.5 rounded bg-muted font-medium">{tracker.type === "trip" ? "Trip / Event" : "Theme"}</span>
+              <span className="px-2 py-0.5 rounded bg-muted font-medium">{isTrip ? "Trip / Event" : "Theme"}</span>
               {tracker.startDate && (
                 <span className="flex items-center gap-1"><Calendar size={11} />
                   {new Date(tracker.startDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
@@ -74,6 +99,11 @@ export default function TrackerDetail() {
             {tracker.description && <p className="text-sm text-muted-foreground mt-1">{tracker.description}</p>}
           </div>
         </div>
+        {isTrip && (
+          <button onClick={() => setShowQuickAdd(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium text-white shadow-sm hover:opacity-90 transition" style={{ background: tracker.color }}>
+            <Camera size={14} /> Add memory
+          </button>
+        )}
       </div>
 
       {/* Summary cards */}
@@ -95,25 +125,18 @@ export default function TrackerDetail() {
             </p>
           </div>
           <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${budgetStatus.over ? "bg-red-500" : "bg-emerald-500"}`}
-              style={{ width: `${Math.min(100, budgetStatus.percent)}%` }}
-            />
+            <div className={`h-full rounded-full transition-all ${budgetStatus.over ? "bg-red-500" : "bg-emerald-500"}`}
+              style={{ width: `${Math.min(100, budgetStatus.percent)}%` }} />
           </div>
           <p className="text-xs text-muted-foreground mt-2">{fmtHome(summary.totalSpent)} of {fmtHome(budgetStatus.totalBudget)} budget across {summary.days} days</p>
         </motion.div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-border flex gap-1">
-        {[
-          { k: "overview", label: "Overview", icon: TrendingUp },
-          { k: "transactions", label: "Transactions", icon: Tag },
-          { k: "rules", label: "Auto-rules", icon: Repeat },
-          { k: "compare", label: "Compare", icon: GitCompare },
-        ].map(({ k, label, icon: Icon }) => (
-          <button key={k} onClick={() => setTab(k as any)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+      <div className="border-b border-border flex gap-1 overflow-x-auto">
+        {tabs.filter((t) => t.show).map(({ k, label, icon: Icon }) => (
+          <button key={k} onClick={() => setTab(k)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap ${
               tab === k ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}>
             <Icon size={14} /> {label}
@@ -155,10 +178,9 @@ export default function TrackerDetail() {
               </div>
             </div>
           ) : (
-            <EmptyTab message="No transactions tagged yet. Add some from the Transactions tab." />
+            <EmptyTab message={isTrip ? "Tap 'Add memory' to start logging your trip." : "No transactions tagged yet. Add some from the Transactions tab."} />
           )}
 
-          {/* Theme variance — top merchants */}
           {tracker.type === "theme" && byMerchant.length > 0 && (
             <div className="bg-card border border-card-border rounded-xl p-5">
               <p className="font-semibold text-sm text-foreground mb-3 flex items-center gap-2"><Sparkles size={14} className="text-primary" /> Variance by merchant / description</p>
@@ -186,13 +208,35 @@ export default function TrackerDetail() {
         </div>
       )}
 
+      {tab === "map" && (
+        <Suspense fallback={<div className="text-center text-muted-foreground py-12 text-sm">Loading map…</div>}>
+          <MapTab points={insights?.mapPoints ?? []} trackerColor={tracker.color} fmtHome={fmtHome} />
+        </Suspense>
+      )}
+
+      {tab === "story" && (
+        <StoryTab story={insights?.story ?? []} fmtHome={fmtHome} trackerColor={tracker.color} />
+      )}
+
       {tab === "transactions" && (
         <TransactionsTab trackerId={id} transactions={transactions} fmtHome={fmtHome} onChange={load} showAdd={showAddTxn} setShowAdd={setShowAddTxn} />
+      )}
+
+      {tab === "insights" && insights && (
+        <InsightsTab data={insights} fmtHome={fmtHome} trackerColor={tracker.color} />
       )}
 
       {tab === "rules" && <RulesTab trackerId={id} onApplied={load} />}
 
       {tab === "compare" && <CompareTab trackerId={id} fmtHome={fmtHome} />}
+
+      <HolidayQuickAdd
+        trackerId={id}
+        tracker={tracker}
+        open={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        onSaved={load}
+      />
     </div>
   );
 }
@@ -215,9 +259,7 @@ function TransactionsTab({ trackerId, transactions, fmtHome, onChange, showAdd, 
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (showAdd) {
-      fetch(`${BASE}/api/transactions?limit=200`).then((r) => r.json()).then((d) => setAllTxns(d.data));
-    }
+    if (showAdd) fetch(`${BASE}/api/transactions?limit=200`).then((r) => r.json()).then((d) => setAllTxns(d.data));
   }, [showAdd]);
 
   const taggedIds = new Set(transactions.map((t: any) => t.id));
@@ -229,9 +271,7 @@ function TransactionsTab({ trackerId, transactions, fmtHome, onChange, showAdd, 
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ transactionIds: Array.from(selected) }),
     });
-    setSelected(new Set());
-    setShowAdd(false);
-    onChange();
+    setSelected(new Set()); setShowAdd(false); onChange();
   };
 
   const handleRemove = async (txnId: number) => {
@@ -244,7 +284,7 @@ function TransactionsTab({ trackerId, transactions, fmtHome, onChange, showAdd, 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{transactions.length} transactions tagged</p>
         <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
-          <Plus size={14} /> {showAdd ? "Cancel" : "Tag transactions"}
+          <Plus size={14} /> {showAdd ? "Cancel" : "Tag existing"}
         </button>
       </div>
 
@@ -257,7 +297,7 @@ function TransactionsTab({ trackerId, transactions, fmtHome, onChange, showAdd, 
                 const ns = new Set(selected); e.target.checked ? ns.add(t.id) : ns.delete(t.id); setSelected(ns);
               }} className="w-4 h-4 accent-primary" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{t.description || "—"}</p>
+                <p className="text-sm font-medium text-foreground truncate">{t.merchant || t.description || "—"}</p>
                 <p className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString()} · {t.categoryName ?? "Uncategorised"}</p>
               </div>
               <p className={`text-sm font-semibold ${t.type === "expense" ? "text-red-500" : "text-emerald-500"}`}>{fmtHome(t.amount)}</p>
@@ -275,11 +315,17 @@ function TransactionsTab({ trackerId, transactions, fmtHome, onChange, showAdd, 
         {transactions.length === 0 ? <p className="text-center py-12 text-muted-foreground text-sm">No transactions yet</p> :
           transactions.map((t: any) => (
             <div key={t.id} className="flex items-center gap-3 p-3 group">
-              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-                {(t.merchant || t.description || "?").slice(0, 2).toUpperCase()}
-              </div>
+              {t.photoUrl ? (
+                <img src={t.photoUrl.startsWith("http") ? t.photoUrl : `${BASE}/api/storage${t.photoUrl}`} alt="" className="w-9 h-9 rounded-lg object-cover" />
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                  {(t.merchant || t.description || "?").slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{t.merchant || t.description || "—"}</p>
+                <p className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                  {t.merchant || t.description || "—"} {t.mood && <span>{t.mood}</span>}
+                </p>
                 <p className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString()} · {t.categoryName ?? "Uncategorised"} · {t.accountName}</p>
               </div>
               <div className="text-right">
@@ -319,9 +365,7 @@ function RulesTab({ trackerId, onApplied }: { trackerId: number; onApplied: () =
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, config }),
     });
-    setAdding(false);
-    setKeywords(""); setStart(""); setEnd("");
-    load();
+    setAdding(false); setKeywords(""); setStart(""); setEnd(""); load();
   };
 
   const remove = async (id: number) => { await fetch(`${BASE}/api/trackers/${trackerId}/rules/${id}`, { method: "DELETE" }); load(); };
@@ -330,9 +374,7 @@ function RulesTab({ trackerId, onApplied }: { trackerId: number; onApplied: () =
     setApplying(true);
     const res = await fetch(`${BASE}/api/trackers/${trackerId}/apply-rules`, { method: "POST" });
     const data = await res.json();
-    setTagged(data.tagged);
-    setApplying(false);
-    onApplied();
+    setTagged(data.tagged); setApplying(false); onApplied();
     setTimeout(() => setTagged(null), 4000);
   };
 
@@ -353,29 +395,21 @@ function RulesTab({ trackerId, onApplied }: { trackerId: number; onApplied: () =
 
       {adding && (
         <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Rule type</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm">
+          <Field label="Rule type">
+            <select value={type} onChange={(e) => setType(e.target.value)} className="input">
               <option value="merchant_match">Merchant / description match</option>
               <option value="date_range">Date range</option>
               <option value="currency">Foreign currency</option>
             </select>
-          </div>
-          {type === "merchant_match" && (
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Keywords (comma-separated)</label>
-              <input value={keywords} onChange={(e) => setKeywords(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" placeholder="e.g. starbucks, costa, pret" />
-            </div>
-          )}
+          </Field>
+          {type === "merchant_match" && <Field label="Keywords (comma-separated)"><input value={keywords} onChange={(e) => setKeywords(e.target.value)} className="input" placeholder="e.g. starbucks, costa, pret" /></Field>}
           {type === "date_range" && (
             <div className="grid grid-cols-2 gap-2">
-              <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="px-3 py-2 rounded-lg border border-border bg-background text-sm" />
-              <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+              <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="input" />
+              <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="input" />
             </div>
           )}
-          {type === "currency" && (
-            <input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} maxLength={3} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" placeholder="e.g. EUR" />
-          )}
+          {type === "currency" && <input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} maxLength={3} className="input" placeholder="EUR" />}
           <div className="flex justify-end gap-2">
             <button onClick={() => setAdding(false)} className="px-3 py-1.5 text-sm rounded-lg border border-border">Cancel</button>
             <button onClick={create} className="px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground">Save rule</button>
@@ -415,21 +449,17 @@ function CompareTab({ trackerId, fmtHome }: { trackerId: number; fmtHome: (n: nu
   const [comparison, setComparison] = useState<any[] | null>(null);
 
   useEffect(() => { fetch(`${BASE}/api/trackers`).then((r) => r.json()).then((d) => setAllTrackers(d.filter((t: any) => t.id !== trackerId))); }, [trackerId]);
-
-  useEffect(() => {
-    if (otherId) fetch(`${BASE}/api/trackers/compare?ids=${trackerId},${otherId}`).then((r) => r.json()).then(setComparison);
-  }, [otherId, trackerId]);
+  useEffect(() => { if (otherId) fetch(`${BASE}/api/trackers/compare?ids=${trackerId},${otherId}`).then((r) => r.json()).then(setComparison); }, [otherId, trackerId]);
 
   return (
     <div className="space-y-4">
       <div>
         <label className="text-xs font-medium text-muted-foreground mb-1 block">Compare with another tracker</label>
-        <select value={otherId ?? ""} onChange={(e) => setOtherId(e.target.value ? Number(e.target.value) : null)} className="w-full max-w-md px-3 py-2 rounded-lg border border-border bg-background text-sm">
+        <select value={otherId ?? ""} onChange={(e) => setOtherId(e.target.value ? Number(e.target.value) : null)} className="input max-w-md">
           <option value="">— Select a tracker —</option>
           {allTrackers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
       </div>
-
       {comparison && comparison.length === 2 && (
         <div className="grid grid-cols-2 gap-4">
           {comparison.map((c: any) => (
@@ -450,21 +480,13 @@ function CompareTab({ trackerId, fmtHome }: { trackerId: number; fmtHome: (n: nu
           ))}
         </div>
       )}
-
       {comparison && comparison.length === 2 && (
-        <div className="bg-muted/40 border border-border rounded-xl p-5 text-sm">
-          <p className="font-medium text-foreground mb-2 flex items-center gap-2"><Sparkles size={14} className="text-primary" /> Variance</p>
-          <p className="text-muted-foreground">
-            <strong className="text-foreground">{comparison[0].tracker.name}</strong> spent{" "}
-            <strong className={comparison[0].totalSpent > comparison[1].totalSpent ? "text-red-500" : "text-emerald-500"}>
-              {fmtHome(Math.abs(comparison[0].totalSpent - comparison[1].totalSpent))}
-              {comparison[0].totalSpent > comparison[1].totalSpent ? " more" : " less"}
-            </strong>{" "}
-            than <strong className="text-foreground">{comparison[1].tracker.name}</strong>
-            {comparison[1].totalSpent > 0 && (
-              <span> ({(((comparison[0].totalSpent - comparison[1].totalSpent) / comparison[1].totalSpent) * 100).toFixed(0)}% diff)</span>
-            )}
-          </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
+          <strong>{comparison[0].tracker.name}</strong> spent {fmtHome(Math.abs(comparison[0].totalSpent - comparison[1].totalSpent))}{" "}
+          {comparison[0].totalSpent > comparison[1].totalSpent ? "more" : "less"} than <strong>{comparison[1].tracker.name}</strong>
+          {comparison[0].dailyAvg && comparison[1].dailyAvg ? (
+            <> — and {comparison[0].dailyAvg > comparison[1].dailyAvg ? "spent more per day" : "had a slower daily pace"}.</>
+          ) : "."}
         </div>
       )}
     </div>
@@ -473,9 +495,18 @@ function CompareTab({ trackerId, fmtHome }: { trackerId: number; fmtHome: (n: nu
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="flex justify-between text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold text-foreground">{value}</span>
+      <span className="font-medium text-foreground">{value}</span>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-muted-foreground mb-1 block">{label}</span>
+      {children}
+    </label>
   );
 }

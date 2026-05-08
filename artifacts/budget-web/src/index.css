@@ -2,6 +2,16 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+/* Reusable form input style for tracker / settings forms */
+.input {
+  @apply w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
+}
+
+/* Leaflet popup theming to match app */
+.leaflet-popup-content-wrapper { border-radius: 12px; padding: 4px; }
+.leaflet-popup-content { margin: 10px 12px; font-family: inherit; }
+.leaflet-container { font-family: inherit; }
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

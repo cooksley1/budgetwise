@@ -12,6 +12,8 @@ import aiRouter from "./ai";
 import gocardlessRouter from "./gocardless";
 import trackersRouter from "./trackers";
 import fxRouter from "./fx";
+import storageRouter from "./storage";
+import holidayRouter from "./holiday";
 
 const router: IRouter = Router();
 
@@ -28,5 +30,7 @@ router.use(aiRouter);
 router.use(gocardlessRouter);
 router.use(trackersRouter);
 router.use(fxRouter);
+router.use(storageRouter);
+router.use(holidayRouter);
 
 export default router;
