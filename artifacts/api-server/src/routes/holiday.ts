@@ -32,7 +32,7 @@ router.post("/ai/scan-receipt-rich", upload.single("receipt"), async (req, res):
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5-mini",
+      model: "gpt-4o-mini",
       max_completion_tokens: 800,
       messages: [
         {
