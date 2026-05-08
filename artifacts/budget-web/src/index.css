@@ -87,46 +87,48 @@
   --elevate-2: rgba(0,0,0, .08);
 
   /* Wayfare — sibling palette to The Slow Travel Planner.
-     Forest green + warm cream + sand accent. */
-  --background: 38 50% 94%;             /* warm cream */
-  --foreground: 150 22% 18%;            /* deep forest text */
+     Sourced from their actual brand assets (cooksley1/slowtravel):
+       #1A2F2B deep forest · #2F4842 forest · #5A7A71 sage
+       #EBD9B4 cream · #D4B483 sand */
+  --background: 38 50% 94%;             /* warm cream reading surface */
+  --foreground: 165 18% 18%;            /* deep forest text */
   --border: 38 25% 84%;                 /* sand-toned border */
   --card: 38 55% 97%;                   /* lifted cream */
-  --card-foreground: 150 22% 18%;
+  --card-foreground: 165 18% 18%;
   --card-border: 38 25% 86%;
 
-  --sidebar: 150 22% 22%;               /* dark forest sidebar (mirrors planner header) */
-  --sidebar-foreground: 38 50% 92%;
-  --sidebar-border: 150 20% 16%;
-  --sidebar-primary: 30 50% 68%;        /* sand CTA */
-  --sidebar-primary-foreground: 150 25% 18%;
-  --sidebar-accent: 150 18% 28%;
-  --sidebar-accent-foreground: 38 50% 92%;
-  --sidebar-ring: 30 50% 68%;
+  --sidebar: 168 28% 14%;               /* #1A2F2B deep forest sidebar */
+  --sidebar-foreground: 38 56% 88%;     /* cream */
+  --sidebar-border: 168 30% 10%;
+  --sidebar-primary: 33 50% 67%;        /* #D4B483 sand CTA */
+  --sidebar-primary-foreground: 168 28% 14%;
+  --sidebar-accent: 165 18% 22%;        /* #2F4842 hover surface */
+  --sidebar-accent-foreground: 38 56% 88%;
+  --sidebar-ring: 33 50% 67%;
 
   --popover: 38 55% 97%;
-  --popover-foreground: 150 22% 18%;
+  --popover-foreground: 165 18% 18%;
   --popover-border: 38 25% 86%;
 
-  --primary: 150 22% 28%;               /* forest green */
-  --primary-foreground: 38 55% 96%;
+  --primary: 165 18% 22%;               /* #2F4842 forest green */
+  --primary-foreground: 38 56% 92%;
   --secondary: 38 35% 88%;              /* warm secondary cream */
-  --secondary-foreground: 150 22% 22%;
+  --secondary-foreground: 165 18% 22%;
   --muted: 38 30% 90%;
-  --muted-foreground: 150 12% 38%;
-  --accent: 30 50% 70%;                 /* sand */
-  --accent-foreground: 150 25% 18%;
-  --destructive: 6 60% 48%;             /* the planner uses a heart-pin terracotta */
-  --destructive-foreground: 38 55% 96%;
+  --muted-foreground: 162 15% 38%;      /* sage-tinted */
+  --accent: 33 50% 67%;                 /* #D4B483 sand */
+  --accent-foreground: 165 18% 18%;
+  --destructive: 6 55% 48%;             /* planner heart-pin terracotta */
+  --destructive-foreground: 38 56% 92%;
 
   --input: 38 25% 82%;
   --ring: 150 22% 28%;
 
-  --chart-1: 150 22% 28%;               /* forest */
-  --chart-2: 30 50% 60%;                /* sand */
-  --chart-3: 130 18% 50%;               /* sage */
+  --chart-1: 165 18% 28%;               /* forest */
+  --chart-2: 33 50% 60%;                /* sand */
+  --chart-3: 162 15% 45%;               /* sage */
   --chart-4: 200 25% 45%;               /* dusty teal */
-  --chart-5: 6 50% 55%;                 /* terracotta */
+  --chart-5: 6 55% 55%;                 /* terracotta */
 
   --app-font-sans: 'Inter', system-ui, sans-serif;
   --app-font-serif: 'Lora', 'Cardo', Georgia, serif;

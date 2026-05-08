@@ -2,27 +2,27 @@
    Forest green primary, warm cream background, sand accent. */
 const colors = {
   light: {
-    text: "#1f2e24",
-    tint: "#3a5746",
+    text: "#1A2F2B",
+    tint: "#2F4842",
 
     background: "#f4ecdc",
-    foreground: "#1f2e24",
+    foreground: "#1A2F2B",
 
     card: "#fbf6e9",
-    cardForeground: "#1f2e24",
+    cardForeground: "#1A2F2B",
     cardBorder: "#e3d7be",
 
-    primary: "#3a5746",
-    primaryForeground: "#fbf6e9",
+    primary: "#2F4842",
+    primaryForeground: "#EBD9B4",
 
     secondary: "#ece2cc",
-    secondaryForeground: "#3a5746",
+    secondaryForeground: "#2F4842",
 
     muted: "#ede4cf",
-    mutedForeground: "#6b7a6e",
+    mutedForeground: "#5A7A71",
 
-    accent: "#d9b48a",
-    accentForeground: "#1f2e24",
+    accent: "#D4B483",
+    accentForeground: "#1A2F2B",
 
     destructive: "#b85a47",
     destructiveForeground: "#fbf6e9",
@@ -30,11 +30,11 @@ const colors = {
     border: "#e3d7be",
     input: "#e3d7be",
 
-    income: "#3a5746",
+    income: "#2F4842",
     expense: "#b85a47",
-    transfer: "#7a8a6e",
+    transfer: "#5A7A71",
 
-    chartColors: ["#3a5746", "#d9b48a", "#7a8a6e", "#5a7a8a", "#b85a47", "#a08458", "#4a6b54", "#cdb591"],
+    chartColors: ["#2F4842", "#D4B483", "#5A7A71", "#5a7a8a", "#b85a47", "#a08458", "#1A2F2B", "#cdb591"],
   },
 
   radius: 12,

@@ -39,7 +39,7 @@ _Populate as you build — non-obvious choices a reader couldn't infer from the 
 
 - **Name**: Wayfare (Old English for "the cost of a journey").
 - **Sibling to**: The Slow Travel Planner — same visual family.
-- **Palette**: forest green `#3a5746` primary, warm cream `#f4ecdc` background, sand `#d9b48a` accent, terracotta `#b85a47` destructive.
+- **Palette** (sourced from `cooksley1/slowtravel` brand assets): `#1A2F2B` deep forest (sidebar), `#2F4842` forest (primary), `#5A7A71` sage (muted), `#EBD9B4` cream (background highlight), `#D4B483` sand (accent), `#b85a47` terracotta (destructive).
 - **Type**: Lora (display/serif headings) + Inter (UI). Mountain-mark logo lockup in `src/components/WayfareLogo.tsx`.
 
 ## User preferences
