@@ -1,81 +1,34 @@
-
-
-Agent
-
-
-
-Show previous messages
-
-20 messages & 87 actions
-
-Checkpoint made
-17 minutes ago
-
-Worked for 11 minutes
-Can you make sure only the budgetwise repo is used and there is no old or legacy items remaining elsewhere that are for this app in Cooksley1.
-
-17 minutes ago
-
-4 messages & 8 actions
-
-Worked for 1 minute
-I think I did this. Replit (Settings → Integrations → GitHub), and make sure Workflows is ticked when you authorise.
-
-9 minutes ago
-
-12 messages & 42 actions
-
-Checkpoint made
-7 minutes ago
-
-Worked for 2 minutes
-
-Attached Image
-3 minutes ago
-
-Planning CI workflow file push
-The GitHub App now has Read and write access to workflows — I can see it clearly in the screenshot. Let me push the CI file right now.
-
-
-3 actions
-The scopes on the OAuth token itself haven't changed — that's a separate credential from the GitHub App. But let me just try a direct push right now, since the App installation has the workflow permission, and see if it goes through.
-
-
-2 actions
-The git push uses the OAuth token which still lacks workflow scope. But the GitHub App installation now has that permission — I can create the file directly through the GitHub REST API instead, which routes through the App.
-
-
-4 actions
-The GitHub Contents API has the same restriction — creating workflow files requires workflow scope on the token, regardless of whether it's done via git push or the API. The OAuth token Replit uses doesn't have that scope, even though the GitHub App installation now does. The two use different auth mechanisms.
-
-The fastest fix is to create the file directly on GitHub's web UI. Here's exactly what to do:
-
-Go to this URL: github.com/cooksley1/budgetwise/new/main
-In the filename box at the top, type exactly: .github/workflows/ci.yml (GitHub will auto-create the folders)
-Paste this content into the editor:
 name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
 jobs:
   typecheck-and-build:
     name: Typecheck & Build
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with:
           version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
       - name: Typecheck all packages
         run: pnpm run typecheck
+
       - name: Build all packages
         run: pnpm run build
         env:
