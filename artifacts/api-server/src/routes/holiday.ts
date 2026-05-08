@@ -86,7 +86,7 @@ router.get("/geocode", async (req, res): Promise<void> => {
   try {
     const r = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`,
-      { headers: { "User-Agent": "BudgetWise/1.0 (personal-finance app)" } },
+      { headers: { "User-Agent": "Wayfare/1.0 (slow-travel companion app)" } },
     );
     if (!r.ok) { res.status(502).json({ error: "geocoder unavailable" }); return; }
     const data = (await r.json()) as any[];

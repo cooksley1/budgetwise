@@ -27,8 +27,8 @@ const plaidClient = new PlaidApi(plaidConfig);
 router.post("/plaid/link-token", async (req, res): Promise<void> => {
   try {
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: "budgetwise-user" },
-      client_name: "BudgetWise",
+      user: { client_user_id: "wayfare-user" },
+      client_name: "Wayfare",
       products: [Products.Transactions],
       country_codes: [CountryCode.Us],
       language: "en",

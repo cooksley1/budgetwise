@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "BudgetWise — Web App"
+title = "Wayfare — Web App"
 version = "1.0.0"
 id = "artifacts/budget-web"
 router = "path"

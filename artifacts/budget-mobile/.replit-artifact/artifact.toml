@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/budget-mobile/"
-title = "BudgetWise — Mobile App"
+title = "Wayfare — Mobile App"
 version = "1.0.0"
 id = "artifacts/budget-mobile"
 router = "expo-domain"

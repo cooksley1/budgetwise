@@ -12,6 +12,13 @@
 .leaflet-popup-content { margin: 10px 12px; font-family: inherit; }
 .leaflet-container { font-family: inherit; }
 
+/* Wayfare display headline — serif, like the parent brand */
+.font-display {
+  font-family: var(--app-font-serif);
+  font-feature-settings: "ss01", "liga";
+  letter-spacing: -0.01em;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -79,60 +86,61 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* BudgetWise Theme - Deep Teal/Forest on Cream */
-  --background: 140 20% 98%;
-  --foreground: 160 40% 15%;
-  --border: 140 15% 90%;
-  --card: 0 0% 100%;
-  --card-foreground: 160 40% 15%;
-  --card-border: 140 15% 92%;
-  
-  --sidebar: 140 20% 98%;
-  --sidebar-foreground: 160 40% 25%;
-  --sidebar-border: 140 15% 90%;
-  --sidebar-primary: 160 60% 30%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 140 30% 92%;
-  --sidebar-accent-foreground: 160 60% 20%;
-  --sidebar-ring: 160 60% 30%;
+  /* Wayfare — sibling palette to The Slow Travel Planner.
+     Forest green + warm cream + sand accent. */
+  --background: 38 50% 94%;             /* warm cream */
+  --foreground: 150 22% 18%;            /* deep forest text */
+  --border: 38 25% 84%;                 /* sand-toned border */
+  --card: 38 55% 97%;                   /* lifted cream */
+  --card-foreground: 150 22% 18%;
+  --card-border: 38 25% 86%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 160 40% 15%;
-  --popover-border: 140 15% 90%;
+  --sidebar: 150 22% 22%;               /* dark forest sidebar (mirrors planner header) */
+  --sidebar-foreground: 38 50% 92%;
+  --sidebar-border: 150 20% 16%;
+  --sidebar-primary: 30 50% 68%;        /* sand CTA */
+  --sidebar-primary-foreground: 150 25% 18%;
+  --sidebar-accent: 150 18% 28%;
+  --sidebar-accent-foreground: 38 50% 92%;
+  --sidebar-ring: 30 50% 68%;
 
-  --primary: 160 60% 30%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 140 30% 92%;
-  --secondary-foreground: 160 60% 20%;
-  --muted: 140 15% 94%;
-  --muted-foreground: 160 20% 40%;
-  --accent: 140 30% 92%;
-  --accent-foreground: 160 60% 20%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  
-  --input: 140 15% 88%;
-  --ring: 160 60% 30%;
+  --popover: 38 55% 97%;
+  --popover-foreground: 150 22% 18%;
+  --popover-border: 38 25% 86%;
 
-  --chart-1: 160 60% 30%;
-  --chart-2: 200 50% 45%;
-  --chart-3: 40 80% 55%;
-  --chart-4: 280 40% 50%;
-  --chart-5: 340 50% 55%;
+  --primary: 150 22% 28%;               /* forest green */
+  --primary-foreground: 38 55% 96%;
+  --secondary: 38 35% 88%;              /* warm secondary cream */
+  --secondary-foreground: 150 22% 22%;
+  --muted: 38 30% 90%;
+  --muted-foreground: 150 12% 38%;
+  --accent: 30 50% 70%;                 /* sand */
+  --accent-foreground: 150 25% 18%;
+  --destructive: 6 60% 48%;             /* the planner uses a heart-pin terracotta */
+  --destructive-foreground: 38 55% 96%;
 
-  --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: Georgia, serif;
+  --input: 38 25% 82%;
+  --ring: 150 22% 28%;
+
+  --chart-1: 150 22% 28%;               /* forest */
+  --chart-2: 30 50% 60%;                /* sand */
+  --chart-3: 130 18% 50%;               /* sage */
+  --chart-4: 200 25% 45%;               /* dusty teal */
+  --chart-5: 6 50% 55%;                 /* terracotta */
+
+  --app-font-sans: 'Inter', system-ui, sans-serif;
+  --app-font-serif: 'Lora', 'Cardo', Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 0.75rem;
-  
-  --shadow-2xs: 0px 2px 0px 0px hsl(160 60% 30% / 0.05);
-  --shadow-xs: 0px 2px 0px 0px hsl(160 60% 30% / 0.05);
-  --shadow-sm: 0px 2px 0px 0px hsl(160 60% 30% / 0.05), 0px 1px 2px -1px hsl(160 60% 30% / 0.05);
-  --shadow: 0px 2px 0px 0px hsl(160 60% 30% / 0.05), 0px 1px 2px -1px hsl(160 60% 30% / 0.05);
-  --shadow-md: 0px 2px 0px 0px hsl(160 60% 30% / 0.05), 0px 2px 4px -1px hsl(160 60% 30% / 0.05);
-  --shadow-lg: 0px 2px 0px 0px hsl(160 60% 30% / 0.05), 0px 4px 6px -1px hsl(160 60% 30% / 0.05);
-  --shadow-xl: 0px 2px 0px 0px hsl(160 60% 30% / 0.05), 0px 8px 10px -1px hsl(160 60% 30% / 0.05);
-  --shadow-2xl: 0px 2px 0px 0px hsl(160 60% 30% / 0.05);
+
+  --shadow-2xs: 0px 2px 0px 0px hsl(150 22% 22% / 0.04);
+  --shadow-xs: 0px 2px 0px 0px hsl(150 22% 22% / 0.04);
+  --shadow-sm: 0px 2px 0px 0px hsl(150 22% 22% / 0.04), 0px 1px 2px -1px hsl(150 22% 22% / 0.04);
+  --shadow: 0px 2px 0px 0px hsl(150 22% 22% / 0.05), 0px 1px 2px -1px hsl(150 22% 22% / 0.05);
+  --shadow-md: 0px 2px 0px 0px hsl(150 22% 22% / 0.05), 0px 2px 4px -1px hsl(150 22% 22% / 0.05);
+  --shadow-lg: 0px 2px 0px 0px hsl(150 22% 22% / 0.06), 0px 4px 6px -1px hsl(150 22% 22% / 0.06);
+  --shadow-xl: 0px 2px 0px 0px hsl(150 22% 22% / 0.06), 0px 8px 10px -1px hsl(150 22% 22% / 0.06);
+  --shadow-2xl: 0px 2px 0px 0px hsl(150 22% 22% / 0.06);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -152,45 +160,45 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 160 30% 8%;
-  --foreground: 140 20% 95%;
-  --border: 160 25% 18%;
-  --card: 160 30% 10%;
-  --card-foreground: 140 20% 95%;
-  --card-border: 160 25% 16%;
-  
-  --sidebar: 160 30% 6%;
-  --sidebar-foreground: 140 20% 85%;
-  --sidebar-border: 160 25% 15%;
-  --sidebar-primary: 160 50% 40%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 160 25% 15%;
-  --sidebar-accent-foreground: 140 20% 95%;
-  --sidebar-ring: 160 50% 40%;
+  --background: 150 22% 10%;
+  --foreground: 38 40% 92%;
+  --border: 150 18% 20%;
+  --card: 150 22% 13%;
+  --card-foreground: 38 40% 92%;
+  --card-border: 150 18% 18%;
 
-  --popover: 160 30% 10%;
-  --popover-foreground: 140 20% 95%;
-  --popover-border: 160 25% 18%;
+  --sidebar: 150 25% 7%;
+  --sidebar-foreground: 38 35% 88%;
+  --sidebar-border: 150 22% 14%;
+  --sidebar-primary: 30 45% 60%;
+  --sidebar-primary-foreground: 150 25% 12%;
+  --sidebar-accent: 150 20% 16%;
+  --sidebar-accent-foreground: 38 40% 92%;
+  --sidebar-ring: 30 45% 60%;
 
-  --primary: 160 50% 40%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 160 25% 15%;
-  --secondary-foreground: 140 20% 95%;
-  --muted: 160 20% 15%;
-  --muted-foreground: 140 15% 70%;
-  --accent: 160 25% 15%;
-  --accent-foreground: 140 20% 95%;
-  --destructive: 0 62% 45%;
-  --destructive-foreground: 0 0% 100%;
-  
-  --input: 160 25% 20%;
-  --ring: 160 50% 40%;
+  --popover: 150 22% 13%;
+  --popover-foreground: 38 40% 92%;
+  --popover-border: 150 18% 20%;
 
-  --chart-1: 160 50% 40%;
-  --chart-2: 200 40% 50%;
-  --chart-3: 40 70% 45%;
-  --chart-4: 280 30% 55%;
-  --chart-5: 340 40% 50%;
+  --primary: 130 22% 55%;
+  --primary-foreground: 150 25% 10%;
+  --secondary: 150 20% 16%;
+  --secondary-foreground: 38 40% 92%;
+  --muted: 150 18% 16%;
+  --muted-foreground: 38 20% 70%;
+  --accent: 30 40% 55%;
+  --accent-foreground: 150 25% 10%;
+  --destructive: 6 55% 50%;
+  --destructive-foreground: 38 40% 92%;
+
+  --input: 150 18% 20%;
+  --ring: 130 22% 55%;
+
+  --chart-1: 130 22% 55%;
+  --chart-2: 30 45% 60%;
+  --chart-3: 150 15% 50%;
+  --chart-4: 200 25% 50%;
+  --chart-5: 6 50% 55%;
 }
 
 @layer base {
@@ -199,6 +207,10 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+  h1, h2, h3 {
+    font-family: var(--app-font-serif);
+    letter-spacing: -0.01em;
   }
 }
 

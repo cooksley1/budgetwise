@@ -1,6 +1,6 @@
-# [Project name]
+# Wayfare
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A slow-travel companion for tracking what a temporary life abroad actually costs — receipts, places, memories, and spend, mapped day by day. Sibling product to [The Slow Travel Planner](https://theslowtravelplanner.com): the planner *plans* the trip, Wayfare *lives* it.
 
 ## Run & Operate
 
@@ -30,7 +30,17 @@ _Populate as you build — non-obvious choices a reader couldn't infer from the 
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Web app (`/`) and Expo mobile app (`/budget-mobile/`) sharing a Postgres backend via the API server (`/api`).
+- Core: accounts, transactions, budgets, goals, subscriptions, reports.
+- Holiday/trip trackers: drop a receipt photo → AI extracts vendor/items/total → geocoded pin on a Leaflet map, daily story timeline with weather, and an Insights tab that surfaces non-obvious findings (DCC fees, peak spend hour, tip patterns).
+- Plaid + GoCardless bank linking.
+
+## Brand
+
+- **Name**: Wayfare (Old English for "the cost of a journey").
+- **Sibling to**: The Slow Travel Planner — same visual family.
+- **Palette**: forest green `#3a5746` primary, warm cream `#f4ecdc` background, sand `#d9b48a` accent, terracotta `#b85a47` destructive.
+- **Type**: Lora (display/serif headings) + Inter (UI). Mountain-mark logo lockup in `src/components/WayfareLogo.tsx`.
 
 ## User preferences
 

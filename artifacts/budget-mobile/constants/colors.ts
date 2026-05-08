@@ -1,38 +1,40 @@
+/* Wayfare — sibling palette to The Slow Travel Planner.
+   Forest green primary, warm cream background, sand accent. */
 const colors = {
   light: {
-    text: "#1a2e1f",
-    tint: "#1f6b45",
+    text: "#1f2e24",
+    tint: "#3a5746",
 
-    background: "#f7faf8",
-    foreground: "#1a2e1f",
+    background: "#f4ecdc",
+    foreground: "#1f2e24",
 
-    card: "#ffffff",
-    cardForeground: "#1a2e1f",
-    cardBorder: "#e8f0ea",
+    card: "#fbf6e9",
+    cardForeground: "#1f2e24",
+    cardBorder: "#e3d7be",
 
-    primary: "#1f6b45",
-    primaryForeground: "#ffffff",
+    primary: "#3a5746",
+    primaryForeground: "#fbf6e9",
 
-    secondary: "#e8f3ec",
-    secondaryForeground: "#1f6b45",
+    secondary: "#ece2cc",
+    secondaryForeground: "#3a5746",
 
-    muted: "#f0f5f1",
-    mutedForeground: "#5a7a62",
+    muted: "#ede4cf",
+    mutedForeground: "#6b7a6e",
 
-    accent: "#e8f3ec",
-    accentForeground: "#1f6b45",
+    accent: "#d9b48a",
+    accentForeground: "#1f2e24",
 
-    destructive: "#ef4444",
-    destructiveForeground: "#ffffff",
+    destructive: "#b85a47",
+    destructiveForeground: "#fbf6e9",
 
-    border: "#ddeae0",
-    input: "#ddeae0",
+    border: "#e3d7be",
+    input: "#e3d7be",
 
-    income: "#10b981",
-    expense: "#ef4444",
-    transfer: "#3b82f6",
+    income: "#3a5746",
+    expense: "#b85a47",
+    transfer: "#7a8a6e",
 
-    chartColors: ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"],
+    chartColors: ["#3a5746", "#d9b48a", "#7a8a6e", "#5a7a8a", "#b85a47", "#a08458", "#4a6b54", "#cdb591"],
   },
 
   radius: 12,

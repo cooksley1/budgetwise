@@ -27,6 +27,7 @@ import Reports from "@/pages/Reports";
 import BankLink from "@/pages/BankLink";
 import Trackers from "@/pages/Trackers";
 import TrackerDetail from "@/pages/TrackerDetail";
+import { WayfareLogo } from "@/components/WayfareLogo";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -48,11 +49,8 @@ function Sidebar({ mobile, onClose }: { mobile?: boolean; onClose?: () => void }
   const [location] = useLocation();
   return (
     <aside className={`flex flex-col h-full ${mobile ? "w-full" : "w-64"} bg-sidebar border-r border-sidebar-border`}>
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-sm">B</span>
-        </div>
-        <span className="font-semibold text-sidebar-foreground text-lg tracking-tight">BudgetWise</span>
+      <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
+        <WayfareLogo size={32} variant="onDark" />
         {mobile && (
           <button onClick={onClose} className="ml-auto p-1 rounded-md hover:bg-sidebar-accent text-sidebar-foreground">
             <X size={18} />
@@ -79,8 +77,8 @@ function Sidebar({ mobile, onClose }: { mobile?: boolean; onClose?: () => void }
           );
         })}
       </nav>
-      <div className="px-4 py-4 border-t border-sidebar-border">
-        <p className="text-xs text-muted-foreground">Your personal finance companion</p>
+      <div className="px-5 py-4 border-t border-sidebar-border">
+        <p className="text-xs text-sidebar-foreground/60 italic font-display">A slow-travel companion to <span className="not-italic">The Slow Travel Planner</span>.</p>
       </div>
     </aside>
   );
@@ -128,7 +126,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-md hover:bg-muted">
             <Menu size={20} />
           </button>
-          <span className="font-semibold text-foreground">BudgetWise</span>
+          <WayfareLogo size={26} variant="onLight" />
         </div>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

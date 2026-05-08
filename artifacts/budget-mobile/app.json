@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "BudgetWise",
+    "name": "Wayfare",
     "slug": "budget-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#f7faf8"
+      "backgroundColor": "#f4ecdc"
     },
     "ios": {
       "supportsTablet": false,
