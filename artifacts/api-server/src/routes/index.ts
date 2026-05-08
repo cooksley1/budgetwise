@@ -9,6 +9,7 @@ import subscriptionsRouter from "./subscriptions";
 import dashboardRouter from "./dashboard";
 import plaidRouter from "./plaid";
 import aiRouter from "./ai";
+import gocardlessRouter from "./gocardless";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(subscriptionsRouter);
 router.use(dashboardRouter);
 router.use(plaidRouter);
 router.use(aiRouter);
+router.use(gocardlessRouter);
 
 export default router;
