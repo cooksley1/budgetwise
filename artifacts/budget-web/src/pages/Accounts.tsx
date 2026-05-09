@@ -20,7 +20,7 @@ function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 }
 
-type FormData = { name: string; type: string; balance: number; color: string; currency: string };
+type FormData = { name: string; type: "checking" | "savings" | "credit" | "investment" | "cash"; balance: number; color: string; currency: string };
 
 function AccountForm({ initial, onSave, onCancel }: { initial?: Partial<FormData & { id: number }>; onSave: (d: FormData) => void; onCancel: () => void }) {
   const { register, handleSubmit, watch } = useForm<FormData>({

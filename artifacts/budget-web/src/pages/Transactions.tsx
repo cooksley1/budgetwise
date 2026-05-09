@@ -17,7 +17,7 @@ function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 }
 
-type TxnForm = { accountId: number; categoryId?: number; amount: number; type: string; description?: string; date: string; isRecurring: boolean };
+type TxnForm = { accountId: number; categoryId?: number; amount: number; type: "income" | "expense" | "transfer"; description?: string; date: string; isRecurring: boolean };
 type Filters = { type: string; categoryId: string; startDate: string; endDate: string };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {

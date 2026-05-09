@@ -12,7 +12,7 @@ function fmt(n: number) {
 const CYCLE_LABELS: Record<string, string> = { weekly: "Weekly", monthly: "Monthly", quarterly: "Quarterly", annually: "Annually" };
 const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
-type FormData = { name: string; amount: number; billingCycle: string; nextBillingDate: string; categoryId?: number; isActive: boolean; color: string };
+type FormData = { name: string; amount: number; billingCycle: "weekly" | "monthly" | "quarterly" | "annually"; nextBillingDate: string; categoryId?: number; isActive: boolean; color: string };
 
 function SubForm({ initial, onSave, onCancel, categories }: { initial?: Partial<FormData & { id: number }>; onSave: (d: FormData) => void; onCancel: () => void; categories: any[] }) {
   const { register, handleSubmit, watch } = useForm<FormData>({
