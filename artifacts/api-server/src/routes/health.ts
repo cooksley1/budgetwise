@@ -8,4 +8,9 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
+// Root /api handler — returns 200 so uptime monitors don't flag it as down
+router.get("/", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 export default router;

@@ -9,15 +9,17 @@ import {
   categoriesTable,
   accountsTable,
 } from "@workspace/db";
+import type { Request, Response } from "express";
+import { requireUserId } from "../lib/requireUserId";
 
 const router: IRouter = Router();
 
-// ── Helpers ───────────────────────────────────────────────────────────────
-async function getTrackerSummary(trackerId: number) {
-  const [tracker] = await db.select().from(trackersTable).where(eq(trackersTable.id, trackerId));
+// ── Helpers ───────────────────────────────────────────────────────────────────
+async function getTrackerSummary(trackerId: number, userId: string) {
+  const [tracker] = await db.select().from(trackersTable)
+    .where(and(eq(trackersTable.id, trackerId), eq(trackersTable.clerkUserId, userId)));
   if (!tracker) return null;
 
-  // Aggregate transactions linked to this tracker
   const txnRows = await db
     .select({
       id: transactionsTable.id,
@@ -45,7 +47,6 @@ async function getTrackerSummary(trackerId: number) {
   const totalSpent = expenses.reduce((s, t) => s + (t.amount ?? 0), 0);
   const totalIncome = txnRows.filter((t) => t.type === "income").reduce((s, t) => s + (t.amount ?? 0), 0);
 
-  // Day calculations (only meaningful for trip type with dates)
   let days = 0;
   if (tracker.startDate && tracker.endDate) {
     const start = new Date(tracker.startDate);
@@ -63,11 +64,14 @@ async function getTrackerSummary(trackerId: number) {
   return { tracker, txnRows, totalSpent, totalIncome, days, dailyAvg, weeklyAvg, monthlyAvg };
 }
 
-// ── List trackers ─────────────────────────────────────────────────────────
-router.get("/trackers", async (_req, res): Promise<void> => {
-  const trackers = await db.select().from(trackersTable).orderBy(desc(trackersTable.createdAt));
+// ── List trackers ─────────────────────────────────────────────────────────────
+router.get("/trackers", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const trackers = await db.select().from(trackersTable)
+    .where(eq(trackersTable.clerkUserId, userId))
+    .orderBy(desc(trackersTable.createdAt));
 
-  // Summary stats per tracker
   const stats = await db
     .select({
       trackerId: trackerTransactionsTable.trackerId,
@@ -76,6 +80,7 @@ router.get("/trackers", async (_req, res): Promise<void> => {
     })
     .from(trackerTransactionsTable)
     .innerJoin(transactionsTable, eq(trackerTransactionsTable.transactionId, transactionsTable.id))
+    .where(inArray(trackerTransactionsTable.trackerId, trackers.map((t) => t.id).filter((id) => id > 0)))
     .groupBy(trackerTransactionsTable.trackerId);
 
   const statsMap = new Map(stats.map((s) => [s.trackerId, s]));
@@ -88,18 +93,17 @@ router.get("/trackers", async (_req, res): Promise<void> => {
   res.json(enriched);
 });
 
-// ── Create tracker ────────────────────────────────────────────────────────
+// ── Create tracker ─────────────────────────────────────────────────────────────
 router.post("/trackers", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const { name, type, description, startDate, endDate, homeCurrency, foreignCurrency, dailyBudget, color, icon } = req.body;
-  if (!name || !type) {
-    res.status(400).json({ error: "name and type are required" });
-    return;
-  }
+  if (!name || !type) { res.status(400).json({ error: "name and type are required" }); return; }
   const [created] = await db
     .insert(trackersTable)
     .values({
-      name,
-      type,
+      clerkUserId: userId,
+      name, type,
       description: description ?? null,
       startDate: startDate ?? null,
       endDate: endDate ?? null,
@@ -113,8 +117,10 @@ router.post("/trackers", async (req, res): Promise<void> => {
   res.status(201).json(created);
 });
 
-// ── Update tracker ────────────────────────────────────────────────────────
+// ── Update tracker ─────────────────────────────────────────────────────────────
 router.put("/trackers/:id", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
   const { name, type, description, startDate, endDate, homeCurrency, foreignCurrency, dailyBudget, color, icon } = req.body;
@@ -133,16 +139,21 @@ router.put("/trackers/:id", async (req, res): Promise<void> => {
       ...(icon !== undefined && { icon }),
       updatedAt: new Date(),
     })
-    .where(eq(trackersTable.id, id))
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)))
     .returning();
   if (!updated) { res.status(404).json({ error: "Tracker not found" }); return; }
   res.json(updated);
 });
 
-// ── Delete tracker (atomic cascade) ───────────────────────────────────────
+// ── Delete tracker ─────────────────────────────────────────────────────────────
 router.delete("/trackers/:id", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
+  const [existing] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
+  if (!existing) { res.status(404).json({ error: "Tracker not found" }); return; }
   await db.transaction(async (tx) => {
     await tx.delete(trackerTransactionsTable).where(eq(trackerTransactionsTable.trackerId, id));
     await tx.delete(trackerRulesTable).where(eq(trackerRulesTable.trackerId, id));
@@ -151,12 +162,14 @@ router.delete("/trackers/:id", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-// ── Compare trackers (must be declared BEFORE /:id route) ────────────────
+// ── Compare trackers ──────────────────────────────────────────────────────────
 router.get("/trackers/compare", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const idsParam = req.query["ids"] as string | undefined;
   if (!idsParam) { res.status(400).json({ error: "ids query param required (comma-separated)" }); return; }
   const ids = idsParam.split(",").map(Number).filter((n) => !Number.isNaN(n));
-  const summaries = await Promise.all(ids.map((id) => getTrackerSummary(id)));
+  const summaries = await Promise.all(ids.map((id) => getTrackerSummary(id, userId)));
   res.json(
     summaries.filter(Boolean).map((s) => ({
       tracker: s!.tracker,
@@ -168,18 +181,19 @@ router.get("/trackers/compare", async (req, res): Promise<void> => {
   );
 });
 
-// ── Get single tracker (with full analytics) ──────────────────────────────
+// ── Get single tracker ────────────────────────────────────────────────────────
 router.get("/trackers/:id", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
 
-  const summary = await getTrackerSummary(id);
+  const summary = await getTrackerSummary(id, userId);
   if (!summary) { res.status(404).json({ error: "Tracker not found" }); return; }
 
   const { tracker, txnRows, totalSpent, totalIncome, days, dailyAvg, weeklyAvg, monthlyAvg } = summary;
   const expenses = txnRows.filter((t) => t.type === "expense");
 
-  // By category
   const catMap = new Map<string, { name: string; color: string | null; icon: string | null; total: number; count: number }>();
   for (const t of expenses) {
     const key = t.categoryName ?? "Uncategorised";
@@ -190,16 +204,10 @@ router.get("/trackers/:id", async (req, res): Promise<void> => {
   }
   const byCategory = Array.from(catMap.values()).sort((a, b) => b.total - a.total);
 
-  // By day
   const dayMap = new Map<string, number>();
-  for (const t of expenses) {
-    dayMap.set(t.date, (dayMap.get(t.date) ?? 0) + (t.amount ?? 0));
-  }
-  const byDay = Array.from(dayMap.entries())
-    .map(([date, total]) => ({ date, total }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  for (const t of expenses) { dayMap.set(t.date, (dayMap.get(t.date) ?? 0) + (t.amount ?? 0)); }
+  const byDay = Array.from(dayMap.entries()).map(([date, total]) => ({ date, total })).sort((a, b) => a.date.localeCompare(b.date));
 
-  // By merchant (for theme analytics — coffee variance, etc)
   const merchMap = new Map<string, { name: string; total: number; count: number; min: number; max: number; avg: number }>();
   for (const t of expenses) {
     const key = t.merchant ?? t.description ?? "Unknown";
@@ -213,16 +221,10 @@ router.get("/trackers/:id", async (req, res): Promise<void> => {
   }
   const byMerchant = Array.from(merchMap.values()).sort((a, b) => b.count - a.count).slice(0, 20);
 
-  // Budget comparison
   let budgetStatus: { dailyBudget: number; totalBudget: number; over: boolean; percent: number } | null = null;
   if (tracker.dailyBudget && days > 0) {
     const totalBudget = tracker.dailyBudget * days;
-    budgetStatus = {
-      dailyBudget: tracker.dailyBudget,
-      totalBudget,
-      over: totalSpent > totalBudget,
-      percent: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
-    };
+    budgetStatus = { dailyBudget: tracker.dailyBudget, totalBudget, over: totalSpent > totalBudget, percent: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0 };
   }
 
   res.json({
@@ -236,101 +238,106 @@ router.get("/trackers/:id", async (req, res): Promise<void> => {
   });
 });
 
-// ── Tag transactions to tracker (verifies existence to avoid orphan links) ─
+// ── Tag transactions to tracker ───────────────────────────────────────────────
 router.post("/trackers/:id/transactions", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
   const { transactionIds } = req.body as { transactionIds?: number[] };
-  if (!Array.isArray(transactionIds) || transactionIds.length === 0) {
-    res.status(400).json({ error: "transactionIds array required" });
-    return;
-  }
+  if (!Array.isArray(transactionIds) || transactionIds.length === 0) { res.status(400).json({ error: "transactionIds array required" }); return; }
   const validIds = transactionIds.filter((n) => Number.isInteger(n));
   if (validIds.length === 0) { res.status(400).json({ error: "no valid transaction ids" }); return; }
-
-  // Verify the tracker exists
-  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable).where(eq(trackersTable.id, id));
+  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
   if (!tracker) { res.status(404).json({ error: "Tracker not found" }); return; }
-
-  // Filter to only transactions that actually exist
-  const existing = await db
-    .select({ id: transactionsTable.id })
-    .from(transactionsTable)
-    .where(inArray(transactionsTable.id, validIds));
+  const existing = await db.select({ id: transactionsTable.id }).from(transactionsTable)
+    .where(and(inArray(transactionsTable.id, validIds), eq(transactionsTable.clerkUserId, userId)));
   if (existing.length === 0) { res.json({ added: 0 }); return; }
-
-  await db
-    .insert(trackerTransactionsTable)
+  await db.insert(trackerTransactionsTable)
     .values(existing.map((t) => ({ trackerId: id, transactionId: t.id })))
     .onConflictDoNothing();
   res.json({ added: existing.length });
 });
 
-// ── Untag transaction ─────────────────────────────────────────────────────
+// ── Untag transaction ─────────────────────────────────────────────────────────
 router.delete("/trackers/:id/transactions/:txnId", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   const txnId = Number(req.params["txnId"]);
   if (Number.isNaN(id) || Number.isNaN(txnId)) { res.status(400).json({ error: "invalid id" }); return; }
-  await db
-    .delete(trackerTransactionsTable)
+  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
+  if (!tracker) { res.status(404).json({ error: "Tracker not found" }); return; }
+  await db.delete(trackerTransactionsTable)
     .where(and(eq(trackerTransactionsTable.trackerId, id), eq(trackerTransactionsTable.transactionId, txnId)));
   res.sendStatus(204);
 });
 
-// ── Rules ────────────────────────────────────────────────────────────────
+// ── Rules ─────────────────────────────────────────────────────────────────────
 router.get("/trackers/:id/rules", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
+  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
+  if (!tracker) { res.status(404).json({ error: "Tracker not found" }); return; }
   const rules = await db.select().from(trackerRulesTable).where(eq(trackerRulesTable.trackerId, id));
   res.json(rules);
 });
 
 const VALID_RULE_TYPES = new Set(["date_range", "merchant_match", "category", "currency"]);
 router.post("/trackers/:id/rules", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
+  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
+  if (!tracker) { res.status(404).json({ error: "Tracker not found" }); return; }
   const { type, config } = req.body;
   if (!type || !config || typeof config !== "object") { res.status(400).json({ error: "type and config object required" }); return; }
   if (!VALID_RULE_TYPES.has(type)) { res.status(400).json({ error: `type must be one of: ${Array.from(VALID_RULE_TYPES).join(", ")}` }); return; }
-  // Validate config per rule type
-  if (type === "merchant_match" && (!Array.isArray(config.keywords) || config.keywords.filter((k: any) => String(k).trim()).length === 0)) {
-    res.status(400).json({ error: "merchant_match rule requires non-empty keywords array" }); return;
-  }
-  if (type === "date_range" && (!config.start || !config.end)) {
-    res.status(400).json({ error: "date_range rule requires start and end dates" }); return;
-  }
-  if (type === "category" && (!Array.isArray(config.categoryIds) || config.categoryIds.length === 0)) {
-    res.status(400).json({ error: "category rule requires non-empty categoryIds array" }); return;
-  }
-  if (type === "currency" && !config.currency) {
-    res.status(400).json({ error: "currency rule requires a currency code" }); return;
-  }
+  if (type === "merchant_match" && (!Array.isArray(config.keywords) || config.keywords.filter((k: any) => String(k).trim()).length === 0)) { res.status(400).json({ error: "merchant_match rule requires non-empty keywords array" }); return; }
+  if (type === "date_range" && (!config.start || !config.end)) { res.status(400).json({ error: "date_range rule requires start and end dates" }); return; }
+  if (type === "category" && (!Array.isArray(config.categoryIds) || config.categoryIds.length === 0)) { res.status(400).json({ error: "category rule requires non-empty categoryIds array" }); return; }
+  if (type === "currency" && !config.currency) { res.status(400).json({ error: "currency rule requires a currency code" }); return; }
   const [rule] = await db.insert(trackerRulesTable).values({ trackerId: id, type, config }).returning();
   res.status(201).json(rule);
 });
 
 router.delete("/trackers/:id/rules/:ruleId", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   const ruleId = Number(req.params["ruleId"]);
   if (Number.isNaN(id) || Number.isNaN(ruleId)) { res.status(400).json({ error: "invalid id" }); return; }
-  // Scope by BOTH trackerId and ruleId to prevent cross-tracker rule deletion
+  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
+  if (!tracker) { res.status(404).json({ error: "Tracker not found" }); return; }
   await db.delete(trackerRulesTable).where(and(eq(trackerRulesTable.id, ruleId), eq(trackerRulesTable.trackerId, id)));
   res.sendStatus(204);
 });
 
-// ── Apply rules to all transactions ───────────────────────────────────────
+// ── Apply rules ───────────────────────────────────────────────────────────────
 router.post("/trackers/:id/apply-rules", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const id = Number(req.params["id"]);
   if (Number.isNaN(id)) { res.status(400).json({ error: "invalid id" }); return; }
+  const [tracker] = await db.select({ id: trackersTable.id }).from(trackersTable)
+    .where(and(eq(trackersTable.id, id), eq(trackersTable.clerkUserId, userId)));
+  if (!tracker) { res.status(404).json({ error: "Tracker not found" }); return; }
 
   const rules = await db.select().from(trackerRulesTable).where(eq(trackerRulesTable.trackerId, id));
   if (rules.length === 0) { res.json({ tagged: 0 }); return; }
 
   const matchingIds = new Set<number>();
-
   for (const rule of rules) {
     const cfg = rule.config as any;
-    const conditions = [];
+    const conditions: any[] = [eq(transactionsTable.clerkUserId, userId)];
 
     if (rule.type === "date_range" && cfg.start && cfg.end) {
       conditions.push(and(gte(transactionsTable.date, cfg.start), lte(transactionsTable.date, cfg.end)));
@@ -349,26 +356,20 @@ router.post("/trackers/:id/apply-rules", async (req, res): Promise<void> => {
     } else if (rule.type === "currency" && cfg.currency) {
       conditions.push(eq(transactionsTable.originalCurrency, cfg.currency));
     } else {
-      // Skip malformed/empty rules to avoid tagging all transactions
       continue;
     }
 
     if (conditions.length > 0) {
-      const matches = await db
-        .select({ id: transactionsTable.id })
-        .from(transactionsTable)
-        .where(and(...conditions));
+      const matches = await db.select({ id: transactionsTable.id }).from(transactionsTable).where(and(...conditions));
       matches.forEach((m) => matchingIds.add(m.id));
     }
   }
 
   if (matchingIds.size > 0) {
-    await db
-      .insert(trackerTransactionsTable)
+    await db.insert(trackerTransactionsTable)
       .values(Array.from(matchingIds).map((txnId) => ({ trackerId: id, transactionId: txnId })))
       .onConflictDoNothing();
   }
-
   res.json({ tagged: matchingIds.size });
 });
 

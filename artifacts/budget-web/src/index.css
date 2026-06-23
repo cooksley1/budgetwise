@@ -1,6 +1,13 @@
+@layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+
+/* WCAG 2.0 AA: Clerk input placeholder must meet 4.5:1 contrast on #f8f6f1 */
+.cl-formFieldInput::placeholder {
+  color: #3d5a52;
+  opacity: 1;
+}
 
 /* Reusable form input style for tracker / settings forms */
 .input {

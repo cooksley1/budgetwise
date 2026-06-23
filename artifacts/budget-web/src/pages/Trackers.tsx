@@ -236,13 +236,13 @@ export default function Trackers() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Trackers</h1>
-          <p className="text-muted-foreground text-sm mt-1">Group spending by trip, event, or recurring theme</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Group spending by trip, event, or recurring theme</p>
         </div>
-        <button onClick={() => setAdding(!adding)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
-          <Plus size={16} /> New tracker
+        <button onClick={() => setAdding(!adding)} className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity flex-shrink-0 self-start">
+          <Plus size={15} /> New tracker
         </button>
       </div>
 
@@ -296,10 +296,10 @@ function TrackerCard({ tracker, idx, onDelete, fmt }: { tracker: Tracker; idx: n
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.05 }}
-      className="bg-card border border-card-border rounded-xl p-5 hover:shadow-md transition-shadow group"
+      className="bg-card border border-card-border rounded-xl p-5 hover:shadow-md transition-shadow group flex flex-col"
     >
       <Link href={`/trackers/${tracker.id}`}>
-        <div className="cursor-pointer space-y-3">
+        <div className="cursor-pointer space-y-3 flex-1">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${tracker.color}20`, color: tracker.color }}>
@@ -336,6 +336,20 @@ function TrackerCard({ tracker, idx, onDelete, fmt }: { tracker: Tracker; idx: n
           </div>
         </div>
       </Link>
+
+      {/* Quick actions */}
+      <div className="mt-3 pt-3 border-t border-border flex gap-2">
+        <Link href={`/trackers/${tracker.id}`} className="flex-1">
+          <button className="w-full text-xs py-1.5 px-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors">
+            Open
+          </button>
+        </Link>
+        <Link href={`/trackers/${tracker.id}?add=1`} className="flex-1">
+          <button className="w-full text-xs py-1.5 px-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-1 font-medium">
+            <Plus size={11} /> Add transaction
+          </button>
+        </Link>
+      </div>
     </motion.div>
   );
 }

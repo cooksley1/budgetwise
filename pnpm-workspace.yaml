@@ -75,6 +75,10 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  # Force a single version of @types/react across all workspace packages to
+  # prevent "two different types with this name" conflicts when Clerk deps
+  # resolve a different minor than the workspace catalog pin.
+  "@types/react": "19.2.14"
   # replit uses linux-x64 only, we can exclude all other platforms
   "esbuild>@esbuild/darwin-arm64": "-"
   "esbuild>@esbuild/darwin-x64": "-"

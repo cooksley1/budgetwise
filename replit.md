@@ -48,7 +48,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- **PDF text extraction uses `pdfjs-dist` (pure JS) — NOT `pdftotext`/poppler.** Replit autoscale containers do NOT include Nix packages from `replit.nix` (that file only affects the local dev shell). `pdftotext` will always be missing in production. `pdfjs-dist/legacy/build/pdf.mjs` is pure JS, bundles with esbuild, and works in both dev and prod. See `.agents/memory/pdf-import-approach.md`.
+- **Statement parsing uses gpt-5-mini with `reasoning_effort: "minimal"` + parallel ~20k-char chunks.** Without minimal reasoning the request exceeds the autoscale timeout. Chunks have no overlap (preserves genuine duplicate transactions — do NOT dedupe).
 
 ## Pointers
 

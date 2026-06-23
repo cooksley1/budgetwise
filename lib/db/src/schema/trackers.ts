@@ -2,9 +2,10 @@ import { pgTable, text, serial, timestamp, doublePrecision, date, integer, jsonb
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-// ── Trackers (trips, themes, projects) ────────────────────────────────────
+// ── Trackers (trips, themes, projects) ────────────────────────────────────────
 export const trackersTable = pgTable("trackers", {
   id: serial("id").primaryKey(),
+  clerkUserId: text("clerk_user_id").notNull().default(""),
   name: text("name").notNull(),
   type: text("type").notNull(), // 'trip' | 'theme'
   description: text("description"),
@@ -23,7 +24,7 @@ export const insertTrackerSchema = createInsertSchema(trackersTable).omit({ id: 
 export type InsertTracker = z.infer<typeof insertTrackerSchema>;
 export type Tracker = typeof trackersTable.$inferSelect;
 
-// ── Tracker ↔ Transaction junction ────────────────────────────────────────
+// ── Tracker ↔ Transaction junction ────────────────────────────────────────────
 export const trackerTransactionsTable = pgTable("tracker_transactions", {
   trackerId: integer("tracker_id").notNull(),
   transactionId: integer("transaction_id").notNull(),

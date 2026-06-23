@@ -24,7 +24,7 @@ router.post("/ai/classify", async (req, res): Promise<void> => {
   const catList = categories.map((c) => `${c.id}: ${c.name} (${c.type})`).join("\n");
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5-mini",
+    model: "gpt-4o-mini",
     max_completion_tokens: 256,
     messages: [
       {
@@ -66,7 +66,7 @@ router.post("/ai/classify-batch", async (req, res): Promise<void> => {
   for (const txn of transactions.slice(0, 20)) {
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         max_completion_tokens: 128,
         messages: [
           {
@@ -97,7 +97,7 @@ router.post("/ai/ocr-receipt", upload.single("receipt"), async (req, res): Promi
   const mimeType = req.file.mimetype || "image/jpeg";
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5-mini",
+    model: "gpt-4o-mini",
     max_completion_tokens: 512,
     messages: [
       {
@@ -141,7 +141,7 @@ router.post("/ai/insights", async (req, res): Promise<void> => {
   const { summary, topCategories, cashFlow } = req.body;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5-mini",
+    model: "gpt-4o-mini",
     max_completion_tokens: 600,
     messages: [
       {

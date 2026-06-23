@@ -1,0 +1,6 @@
+- [PDF import approach](pdf-import-approach.md) — Use system pdftotext (poppler, Nix runtime) via execFile; never install pdf-parse/pdfjs-dist as npm deps (native canvas deps break bundling).
+- [Clerk auth setup](clerk-auth-setup.md) — Replit-managed Clerk provisioned; web + Expo mobile fully wired with branded sign-in/sign-up pages.
+- [esbuild-zod-import](esbuild-zod-import.md) — api-server esbuild can't resolve `zod/v4` subpath; always import from `"zod"` or avoid the import entirely.
+- [clerk-user-scoping](clerk-user-scoping.md) — clerkUserId pattern for per-user data isolation across all DB tables.
+- [Guest mode architecture](guest-mode.md) — guest IDs stored in localStorage, injected as `Bearer guest-<uuid>` via `setAuthTokenGetter`; shared `requireUserId` in api-server handles fallback.
+- [Tracker quick-add URL convention](tracker-quickadd.md) — `/trackers/:id?add=1` auto-opens the add transaction form via `useSearch()` in TrackerDetail.

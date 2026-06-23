@@ -10,6 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.22",
+    "@clerk/shared": "^4.14.0",
     "@google-cloud/storage": "^7.19.0",
     "@types/multer": "^2.1.0",
     "@workspace/api-zod": "workspace:*",
@@ -19,17 +21,21 @@
     "drizzle-orm": "catalog:",
     "express": "^5",
     "google-auth-library": "^10.6.2",
+    "http-proxy-middleware": "^4.0.0",
     "multer": "^2.1.1",
     "openai": "^6.36.0",
+    "pdfjs-dist": "^6.0.227",
     "pino": "^9",
     "pino-http": "^10",
-    "plaid": "^42.2.0"
+    "plaid": "^42.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "catalog:",
+    "@types/pdf-parse": "^1.1.5",
     "esbuild": "^0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
     "pino-pretty": "^13",

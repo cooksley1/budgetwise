@@ -29,7 +29,7 @@ export default function InsightsTab({ data, fmtHome, trackerColor }: { data: Ins
       <div className="bg-card border border-card-border rounded-xl p-12 text-center">
         <Sparkles size={28} className="mx-auto text-muted-foreground mb-3" />
         <p className="text-sm font-medium text-foreground mb-1">Insights unlock as you spend</p>
-        <p className="text-xs text-muted-foreground">Add a few transactions and we'll surface patterns you might miss.</p>
+        <p className="text-xs text-muted-foreground">Add a few transactions and we'll surface patterns you might miss — spending peaks, DCC fees, tipping habits and more.</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function InsightsTab({ data, fmtHome, trackerColor }: { data: Ins
         )}
         {data.cheapest && (
           <InsightCard icon={<Heart size={14} />} accent="cyan" title="Cheapest gem"
-            body={<><strong className="text-foreground text-base">{data.cheapest.name}</strong><span className="block mt-1">Just {fmtHome(data.cheapest.amount)} — bargain on {new Date(data.cheapest.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}.</span></>} />
+            body={<><strong className="text-foreground text-base">{data.cheapest.name}</strong><span className="block mt-1">Just {fmtHome(data.cheapest.amount)}, a bargain on {new Date(data.cheapest.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}.</span></>} />
         )}
         {data.mostVisited && data.mostVisited.visits >= 3 && (
           <InsightCard icon={<Sparkles size={14} />} accent="pink" title="Your local spot"
@@ -107,7 +107,7 @@ export default function InsightsTab({ data, fmtHome, trackerColor }: { data: Ins
         )}
         {data.dccLeak && (
           <InsightCard icon={<AlertTriangle size={14} />} accent="red" title="Heads up: card markup"
-            body={<><strong className="text-foreground text-base">~{fmtHome(data.dccLeak)} likely lost</strong><span className="block mt-1">Some transactions were charged in your home currency abroad — typically banks add a ~3% markup. Always pay in the local currency at the terminal.</span></>} />
+            body={<><strong className="text-foreground text-base">~{fmtHome(data.dccLeak)} likely lost</strong><span className="block mt-1">Some transactions were charged in your home currency abroad. Typically banks add a 3% markup. Always pay in the local currency at the terminal.</span></>} />
         )}
         {data.tipAvgPct != null && (
           <InsightCard icon={<Sparkles size={14} />} accent="amber" title="Your tipping pattern"

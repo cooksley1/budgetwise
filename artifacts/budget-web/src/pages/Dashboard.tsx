@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Wallet, DollarSign, CreditCard, RefreshCw } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, DollarSign, CreditCard, RefreshCw, MapPin, ChevronRight } from "lucide-react";
 import {
   useGetDashboardSummary,
   useListRecentTransactions,
@@ -8,6 +10,12 @@ import {
   useGetBudgetsOverview,
 } from "@workspace/api-client-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const TRACKER_ICONS: Record<string, string> = {
+  plane: "✈️", coffee: "☕", hammer: "🔨", heart: "❤️", graduationcap: "🎓",
+};
 
 const fadeUp = (i: number) => ({
   initial: { opacity: 0, y: 16 },
@@ -26,15 +34,13 @@ function fmt(n: number, compact = false) {
 
 function StatCard({ label, value, sub, icon: Icon, color, i }: any) {
   return (
-    <motion.div {...fadeUp(i)} className="bg-card border border-card-border rounded-xl p-5 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground font-medium">{label}</span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
-          <Icon size={16} />
-        </div>
+    <motion.div {...fadeUp(i)} className="bg-card border border-card-border rounded-xl p-4 relative overflow-hidden">
+      <div className={`absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
+        <Icon size={16} />
       </div>
-      <span className="text-2xl font-bold text-foreground tracking-tight">{value}</span>
-      {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
+      <p className="text-xs font-medium text-muted-foreground mb-2 pr-10 leading-snug">{label}</p>
+      <p className="text-2xl font-bold text-foreground tracking-tight">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
     </motion.div>
   );
 }
@@ -47,6 +53,14 @@ export default function Dashboard() {
   const { data: byCategory } = useGetSpendingByCategory({});
   const { data: cashFlow } = useGetCashFlow();
   const { data: budgets } = useGetBudgetsOverview();
+  const [trackers, setTrackers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${BASE}/api/trackers`)
+      .then((r) => r.ok ? r.json() : [])
+      .then(setTrackers)
+      .catch(() => {});
+  }, []);
 
   const stats = summary
     ? [
@@ -76,7 +90,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cash Flow */}
         <motion.div {...fadeUp(3)} className="bg-card border border-card-border rounded-xl p-5">
-          <h2 className="font-semibold text-foreground mb-4">Cash Flow — Last 6 Months</h2>
+          <h2 className="font-semibold text-foreground mb-4">Cash Flow: Last 6 Months</h2>
           {cashFlow && cashFlow.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={cashFlow} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -169,7 +183,7 @@ export default function Dashboard() {
                     {t.categoryIcon ?? "T"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{t.description ?? "Transaction"}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{t.description || "—"}</p>
                     <p className="text-xs text-muted-foreground">{t.categoryName ?? "Uncategorized"} · {t.date}</p>
                   </div>
                   <span className={`text-sm font-semibold flex-shrink-0 ${t.type === "income" ? "text-emerald-600" : "text-foreground"}`}>
@@ -186,6 +200,49 @@ export default function Dashboard() {
           )}
         </motion.div>
       </div>
+
+      {/* Active Trackers */}
+      {trackers.length > 0 && (
+        <motion.div {...fadeUp(7)}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <MapPin size={16} className="text-primary" />
+              Active Trackers
+            </h2>
+            <Link href="/trackers">
+              <span className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                View all <ChevronRight size={12} />
+              </span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {trackers.slice(0, 4).map((t: any) => (
+              <Link key={t.id} href={`/trackers/${t.id}`}>
+                <motion.div
+                  whileHover={{ y: -2 }}
+                  className="bg-card border border-card-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                      style={{ background: `${t.color}20` }}
+                    >
+                      {TRACKER_ICONS[t.icon] ?? "📍"}
+                    </div>
+                    <span className="text-sm font-semibold text-foreground truncate">{t.name}</span>
+                  </div>
+                  <p className="text-xl font-bold text-foreground">
+                    {new Intl.NumberFormat("en-US", { style: "currency", currency: t.homeCurrency || "USD", maximumFractionDigits: 0 }).format(t.totalSpent)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t.transactionCount} transaction{t.transactionCount !== 1 ? "s" : ""}
+                  </p>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

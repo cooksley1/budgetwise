@@ -14,6 +14,7 @@ import trackersRouter from "./trackers";
 import fxRouter from "./fx";
 import storageRouter from "./storage";
 import holidayRouter from "./holiday";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(trackersRouter);
 router.use(fxRouter);
 router.use(storageRouter);
 router.use(holidayRouter);
+router.use(reportsRouter);
 
 export default router;

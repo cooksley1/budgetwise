@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const accountsTable = pgTable("accounts", {
   id: serial("id").primaryKey(),
+  clerkUserId: text("clerk_user_id").notNull().default(""),
   name: text("name").notNull(),
   type: text("type").notNull(), // checking, savings, credit, investment, cash
   balance: doublePrecision("balance").notNull().default(0),

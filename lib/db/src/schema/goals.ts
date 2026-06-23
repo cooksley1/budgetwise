@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const goalsTable = pgTable("goals", {
   id: serial("id").primaryKey(),
+  clerkUserId: text("clerk_user_id").notNull().default(""),
   name: text("name").notNull(),
   targetAmount: doublePrecision("target_amount").notNull(),
   currentAmount: doublePrecision("current_amount").notNull().default(0),

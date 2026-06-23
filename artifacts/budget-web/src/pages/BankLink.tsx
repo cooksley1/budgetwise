@@ -311,7 +311,7 @@ function PlaidFlow({ onSuccess }: { onSuccess: (a: number, t: number) => void })
         {loading ? <><Loader2 size={18} className="animate-spin" /> Connecting…</> : <><Link2 size={18} /> Connect Bank Account</>}
       </button>
       <p className="text-center text-xs text-muted-foreground">
-        Sandbox mode — use username{" "}
+        Sandbox mode: use username{" "}
         <code className="font-mono bg-muted px-1 rounded">user_good</code> /{" "}
         password <code className="font-mono bg-muted px-1 rounded">pass_good</code>
       </p>
@@ -438,7 +438,7 @@ function ReceiptOcr() {
         </div>
         <div>
           <h3 className="font-semibold text-foreground">Scan a Receipt</h3>
-          <p className="text-xs text-muted-foreground">Upload a photo — AI extracts merchant, amount, date & line items</p>
+          <p className="text-xs text-muted-foreground">Upload a photo. AI extracts merchant, amount, date and line items.</p>
         </div>
       </div>
 
@@ -625,7 +625,7 @@ export default function BankLink() {
           </div>
           <div>
             <h3 className="font-semibold text-foreground">Link a Bank Account</h3>
-            <p className="text-xs text-muted-foreground">Connects using free open-banking providers — 30+ countries supported</p>
+            <p className="text-xs text-muted-foreground">Connects using free open-banking providers, covering 30+ countries.</p>
           </div>
         </div>
 
@@ -751,18 +751,18 @@ export default function BankLink() {
             <p className="text-xs text-muted-foreground">AI matches any description to your spending categories</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <input
             value={classifyDesc}
             onChange={(e) => setClassifyDesc(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && classify()}
             placeholder="e.g. Starbucks, Netflix, Tesco…"
-            className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <button
             onClick={classify}
             disabled={classifying || !classifyDesc.trim()}
-            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60 flex items-center gap-1.5"
+            className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {classifying ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Classify
           </button>

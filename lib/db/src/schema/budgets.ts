@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const budgetsTable = pgTable("budgets", {
   id: serial("id").primaryKey(),
+  clerkUserId: text("clerk_user_id").notNull().default(""),
   categoryId: integer("category_id").notNull(),
   limitAmount: doublePrecision("limit_amount").notNull(),
   month: text("month").notNull(), // YYYY-MM

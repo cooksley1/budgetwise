@@ -28,6 +28,13 @@ async function buildAll() {
     // - uses native modules and loads them dynamically (e.g. sharp)
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
+      // pdfjs-dist must NOT be bundled — it uses import.meta.url to locate its
+      // worker file (pdf.worker.mjs) at runtime. When bundled by esbuild the
+      // internal paths break and text extraction silently returns empty strings.
+      // Marking it external keeps the package intact in node_modules so it can
+      // find its own worker. The deployment build step (pnpm install) ensures
+      // it is available on the production container.
+      "pdfjs-dist",
       "*.node",
       "sharp",
       "better-sqlite3",
@@ -115,9 +122,38 @@ import __bannerUrl from 'node:url';
 globalThis.require = __bannerCrReq(import.meta.url);
 globalThis.__filename = __bannerUrl.fileURLToPath(import.meta.url);
 globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
+
+// pdfjs-dist bundles canvas.js which runs new DOMMatrix() at module init time.
+// DOMMatrix/ImageData/Path2D are browser-only APIs absent in Node.js. We only
+// use pdfjs-dist for text extraction (no rendering), so minimal stubs suffice.
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {
+    constructor() {
+      this.a=1;this.b=0;this.c=0;this.d=1;this.e=0;this.f=0;
+      this.m11=1;this.m12=0;this.m13=0;this.m14=0;
+      this.m21=0;this.m22=1;this.m23=0;this.m24=0;
+      this.m31=0;this.m32=0;this.m33=1;this.m34=0;
+      this.m41=0;this.m42=0;this.m43=0;this.m44=1;
+      this.isIdentity=true;this.is2D=true;
+    }
+    invertSelf(){return this;}multiplySelf(){return this;}
+    preMultiplySelf(){return this;}translateSelf(){return this;}
+    scaleSelf(){return this;}scale3dSelf(){return this;}
+    rotateSelf(){return this;}rotateFromVectorSelf(){return this;}
+    rotateAxisAngleSelf(){return this;}skewXSelf(){return this;}
+    skewYSelf(){return this;}setMatrixValue(){return this;}
+  };
+}
+if (typeof globalThis.ImageData === 'undefined') {
+  globalThis.ImageData = class ImageData { constructor() {} };
+}
+if (typeof globalThis.Path2D === 'undefined') {
+  globalThis.Path2D = class Path2D { constructor() {} };
+}
     `,
     },
   });
+
 }
 
 buildAll().catch((err) => {

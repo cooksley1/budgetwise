@@ -90,15 +90,15 @@ export default function Budgets() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Budgets</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-0.5">
             {fmt(totalSpent)} spent of {fmt(totalBudget)} budget this month
           </p>
         </div>
-        <button onClick={() => setAdding(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-          <Plus size={16} /> Add Budget
+        <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity flex-shrink-0 self-start">
+          <Plus size={15} /> Add budget
         </button>
       </div>
 

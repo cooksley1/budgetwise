@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import { eq, sql, and } from "drizzle-orm";
 import { db, accountsTable, transactionsTable, subscriptionsTable, categoriesTable } from "@workspace/db";
+import type { Request, Response } from "express";
+import { requireUserId } from "../lib/requireUserId";
 
 const router: IRouter = Router();
 
@@ -9,11 +11,14 @@ function currentMonth() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-router.get("/dashboard/summary", async (_req, res): Promise<void> => {
+router.get("/dashboard/summary", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const month = currentMonth();
 
   const [accounts, { income, expenses, txnCount }, { subsCost }, { accountCount }] = await Promise.all([
-    db.select({ balance: accountsTable.balance }).from(accountsTable),
+    db.select({ balance: accountsTable.balance }).from(accountsTable)
+      .where(eq(accountsTable.clerkUserId, userId)),
     db
       .select({
         income: sql<number>`coalesce(sum(case when type = 'income' then amount else 0 end), 0)::float`,
@@ -21,16 +26,20 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
         txnCount: sql<number>`count(*)::int`,
       })
       .from(transactionsTable)
-      .where(sql`to_char(date::date, 'YYYY-MM') = ${month}`)
+      .where(and(
+        eq(transactionsTable.clerkUserId, userId),
+        sql`to_char(date::date, 'YYYY-MM') = ${month}`
+      ))
       .then((r) => r[0]),
     db
       .select({ subsCost: sql<number>`coalesce(sum(amount), 0)::float` })
       .from(subscriptionsTable)
-      .where(eq(subscriptionsTable.isActive, true))
+      .where(and(eq(subscriptionsTable.clerkUserId, userId), eq(subscriptionsTable.isActive, true)))
       .then((r) => r[0]),
     db
       .select({ accountCount: sql<number>`count(*)::int` })
       .from(accountsTable)
+      .where(eq(accountsTable.clerkUserId, userId))
       .then((r) => r[0]),
   ]);
 
@@ -53,6 +62,8 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
 });
 
 router.get("/dashboard/spending-by-category", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
   const month = (req.query.month as string) ?? currentMonth();
 
   const rows = await db
@@ -66,12 +77,11 @@ router.get("/dashboard/spending-by-category", async (req, res): Promise<void> =>
     })
     .from(transactionsTable)
     .leftJoin(categoriesTable, eq(transactionsTable.categoryId, categoriesTable.id))
-    .where(
-      and(
-        eq(transactionsTable.type, "expense"),
-        sql`to_char(date::date, 'YYYY-MM') = ${month}`
-      )
-    )
+    .where(and(
+      eq(transactionsTable.clerkUserId, userId),
+      eq(transactionsTable.type, "expense"),
+      sql`to_char(date::date, 'YYYY-MM') = ${month}`
+    ))
     .groupBy(transactionsTable.categoryId, categoriesTable.name, categoriesTable.color, categoriesTable.icon)
     .orderBy(sql`sum(amount) desc`);
 
@@ -86,7 +96,10 @@ router.get("/dashboard/spending-by-category", async (req, res): Promise<void> =>
   res.json(result);
 });
 
-router.get("/dashboard/cash-flow", async (_req, res): Promise<void> => {
+router.get("/dashboard/cash-flow", async (req, res): Promise<void> => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   const rows = await db
     .select({
       month: sql<string>`to_char(date_trunc('month', date::date), 'YYYY-MM')`,
@@ -94,7 +107,10 @@ router.get("/dashboard/cash-flow", async (_req, res): Promise<void> => {
       expenses: sql<number>`coalesce(sum(case when type = 'expense' then amount else 0 end), 0)::float`,
     })
     .from(transactionsTable)
-    .where(sql`date::date >= (current_date - interval '6 months')`)
+    .where(and(
+      eq(transactionsTable.clerkUserId, userId),
+      sql`date::date >= (current_date - interval '6 months')`
+    ))
     .groupBy(sql`date_trunc('month', date::date)`)
     .orderBy(sql`date_trunc('month', date::date)`);
 

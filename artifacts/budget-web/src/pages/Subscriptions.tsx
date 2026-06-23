@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, RefreshCw, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, ToggleLeft, ToggleRight, Sparkles, Check, X, Loader2 } from "lucide-react";
 import { useListSubscriptions, useCreateSubscription, useUpdateSubscription, useDeleteSubscription, useListCategories, getListSubscriptionsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
@@ -13,6 +15,15 @@ const CYCLE_LABELS: Record<string, string> = { weekly: "Weekly", monthly: "Month
 const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
 type FormData = { name: string; amount: number; billingCycle: "weekly" | "monthly" | "quarterly" | "annually"; nextBillingDate: string; categoryId?: number; isActive: boolean; color: string };
+
+interface DetectedCandidate {
+  name: string;
+  amount: number;
+  billingCycle: string;
+  occurrences: number;
+  confidence: number;
+  lastSeen: string;
+}
 
 function SubForm({ initial, onSave, onCancel, categories }: { initial?: Partial<FormData & { id: number }>; onSave: (d: FormData) => void; onCancel: () => void; categories: any[] }) {
   const { register, handleSubmit, watch } = useForm<FormData>({
@@ -78,6 +89,11 @@ function SubForm({ initial, onSave, onCancel, categories }: { initial?: Partial<
   );
 }
 
+function ConfidencePill({ pct }: { pct: number }) {
+  const color = pct >= 70 ? "bg-emerald-100 text-emerald-700" : pct >= 40 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground";
+  return <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${color}`}>{pct}% match</span>;
+}
+
 export default function Subscriptions() {
   const { data: subs } = useListSubscriptions();
   const { data: categories } = useListCategories();
@@ -87,6 +103,9 @@ export default function Subscriptions() {
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
+  const [detecting, setDetecting] = useState(false);
+  const [candidates, setCandidates] = useState<DetectedCandidate[] | null>(null);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const invalidate = () => qc.invalidateQueries({ queryKey: getListSubscriptionsQueryKey() });
 
@@ -106,22 +125,109 @@ export default function Subscriptions() {
     if (confirm("Delete this subscription?")) deleteSub.mutate({ id }, { onSuccess: invalidate });
   };
 
+  const handleDetect = async () => {
+    setDetecting(true);
+    try {
+      const r = await fetch(`${BASE}/api/subscriptions/detect`);
+      if (r.ok) setCandidates(await r.json());
+    } finally {
+      setDetecting(false);
+    }
+  };
+
+  const handleAddCandidate = (c: DetectedCandidate) => {
+    const nextDate = new Date();
+    nextDate.setMonth(nextDate.getMonth() + 1);
+    createSub.mutate({
+      data: {
+        name: c.name,
+        amount: c.amount,
+        billingCycle: c.billingCycle as any,
+        nextBillingDate: nextDate.toISOString().split("T")[0],
+        isActive: true,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      },
+    }, { onSuccess: () => { invalidate(); setDismissed((d) => new Set([...d, c.name])); } });
+  };
+
   const monthlyTotal = subs?.filter(s => s.isActive).reduce((sum, s) => {
     const multipliers: Record<string, number> = { weekly: 4.33, monthly: 1, quarterly: 1 / 3, annually: 1 / 12 };
     return sum + s.amount * (multipliers[s.billingCycle] ?? 1);
   }, 0) ?? 0;
 
+  const visibleCandidates = candidates?.filter((c) => !dismissed.has(c.name)) ?? [];
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Subscriptions</h1>
-          <p className="text-muted-foreground text-sm mt-1">Monthly cost: <span className="font-semibold text-foreground">{fmt(monthlyTotal)}</span></p>
+          <p className="text-muted-foreground text-sm mt-0.5">Monthly cost: <span className="font-semibold text-foreground">{fmt(monthlyTotal)}</span></p>
         </div>
-        <button onClick={() => setAdding(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-          <Plus size={16} /> Add Subscription
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={handleDetect}
+            disabled={detecting}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-60"
+          >
+            {detecting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            Detect recurring
+          </button>
+          <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            <Plus size={15} /> Add
+          </button>
+        </div>
       </div>
+
+      {/* Detected candidates panel */}
+      <AnimatePresence>
+        {visibleCandidates.length > 0 && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-amber-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles size={15} className="text-amber-600" />
+                <span className="text-sm font-semibold text-amber-900">Found {visibleCandidates.length} recurring payment{visibleCandidates.length !== 1 ? "s" : ""} in your transactions</span>
+              </div>
+              <button onClick={() => setCandidates(null)} className="text-amber-500 hover:text-amber-700 transition-colors"><X size={16} /></button>
+            </div>
+            <div className="divide-y divide-amber-100">
+              {visibleCandidates.map((c) => (
+                <div key={c.name} className="flex items-center gap-3 px-4 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0">
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground">{CYCLE_LABELS[c.billingCycle] ?? c.billingCycle} · seen {c.occurrences}× · last {c.lastSeen}</p>
+                  </div>
+                  <ConfidencePill pct={c.confidence} />
+                  <span className="font-bold text-sm text-foreground">{fmt(c.amount)}</span>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleAddCandidate(c)}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                      <Check size={12} /> Add
+                    </button>
+                    <button
+                      onClick={() => setDismissed((d) => new Set([...d, c.name]))}
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {candidates !== null && visibleCandidates.length === 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-6 text-sm text-muted-foreground bg-muted/40 rounded-xl border border-border">
+            No new recurring payments detected. All found patterns are already tracked.
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {adding && (
@@ -154,7 +260,7 @@ export default function Subscriptions() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground text-sm">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">{CYCLE_LABELS[s.billingCycle]} · Next: {s.nextBillingDate}</p>
+                  <p className="text-xs text-muted-foreground">{CYCLE_LABELS[s.billingCycle]} · Next: {s.nextBillingDate ?? "—"}</p>
                 </div>
                 <p className="font-bold text-foreground">{fmt(s.amount)}</p>
                 <div className="flex items-center gap-1">
@@ -174,7 +280,7 @@ export default function Subscriptions() {
         <div className="text-center py-16 text-muted-foreground">
           <RefreshCw size={40} strokeWidth={1.5} className="mx-auto mb-3" />
           <p className="font-medium text-foreground">No subscriptions tracked</p>
-          <p className="text-sm mt-1">Add recurring services to track your monthly costs</p>
+          <p className="text-sm mt-1">Add manually or click <strong>Detect recurring</strong> to find them in your transactions</p>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, useRoute } from "wouter";
+import { Link, useRoute, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Calendar, TrendingUp, TrendingDown, Plus, Trash2, Tag, Plane, Coffee, Hammer, Heart,
@@ -39,6 +39,7 @@ type TabKey = "overview" | "map" | "story" | "transactions" | "insights" | "rule
 export default function TrackerDetail() {
   const [, params] = useRoute("/trackers/:id");
   const id = Number(params?.id);
+  const search = useSearch();
   const [data, setData] = useState<Detail | null>(null);
   const [insights, setInsights] = useState<any | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
@@ -55,6 +56,10 @@ export default function TrackerDetail() {
   };
 
   useEffect(() => { if (!Number.isNaN(id)) load(); }, [id]);
+
+  useEffect(() => {
+    if (new URLSearchParams(search).get("add") === "1") setShowAddTxn(true);
+  }, [search]);
 
   if (!data) return <div className="p-6 text-center text-muted-foreground">Loading…</div>;
 
