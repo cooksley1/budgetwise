@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
+
+.flow-theme {
+  --bg: #F4F4F0;
+  --surface: #FFFFFF;
+  --text: #0A0A0A;
+  --muted: #666666;
+  --border: #0A0A0A;
+  
+  /* High-impact brutalist palette */
+  --accent-blue: #1D4ED8;    /* Strong Blue */
+  --accent-red: #E11D48;     /* Rose Red */
+  --accent-green: #059669;   /* Emerald */
+  --accent-yellow: #F59E0B;  /* Amber */
+  --accent-purple: #7C3AED;  /* Violet */
+  
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: 'Clash Display', sans-serif;
+}
+
+.font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+.brutal-border {
+  border: 2px solid var(--border);
+}
+
+.brutal-shadow {
+  box-shadow: 4px 4px 0px var(--border);
+}
+
+.brutal-shadow-lg {
+  box-shadow: 8px 8px 0px var(--border);
+}
+
+.brutal-shadow-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brutal-shadow-hover:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0px var(--border);
+}
+
+.brutal-card {
+  background-color: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: 4px 4px 0px var(--border);
+}
+
+/* Custom Scrollbar for the brutalist theme */
+.flow-theme ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.flow-theme ::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-left: 2px solid var(--border);
+}
+
+.flow-theme ::-webkit-scrollbar-thumb {
+  background: var(--text);
+  border: 2px solid var(--bg);
+}
+
+.flow-theme ::-webkit-scrollbar-corner {
+  background: var(--bg);
+}
+
+/* Allocation Bar Animation */
+@keyframes expandWidth {
+  from { width: 0; }
+}
+
+.animate-expand {
+  animation: expandWidth 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Marquee for the ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+}
